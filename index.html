@@ -566,6 +566,25 @@ tr:hover td{background:#E3F2FD;}
 <!-- ═══════════════════════════════════════════ TAB 4: WEEKLY ═══ -->
 <div class="tab-panel" id="tab-weekly">
 
+  <!-- ── MASTER LIST CARD (weekly) ── -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon"><svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5A5.5 5.5 0 118 2.5a5.5 5.5 0 010 11z"/></svg></div>
+      <h2>OFFICER MASTER LIST</h2>
+      <span style="margin-left:auto;font-size:.75rem;color:#888;" id="wMasterCount">0 officers</span>
+    </div>
+    <div class="card-body">
+      <p class="paste-hint" style="margin-bottom:12px;">Officers listed here are used to identify chronic defaulters in the weekly report. Changes sync with the Setup tab roster.</p>
+      <div class="master-grid" id="wMasterGrid"></div>
+      <div class="add-officer-row" style="margin-top:14px;">
+        <input class="input-sm" id="wNewName" placeholder="Officer Name" style="min-width:180px;"/>
+        <input class="input-sm" id="wNewDesig" placeholder="Designation" style="min-width:180px;"/>
+        <button class="btn btn-outline" onclick="wAddOfficer()">+ Add Officer</button>
+        <button class="btn btn-outline" onclick="wClearMaster()" style="margin-left:auto;color:#999;border-color:#ccc;">Clear All</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Paste card -->
   <div class="card">
     <div class="card-head">
@@ -821,15 +840,23 @@ function switchTab(name){
 
 // ═══════════════════ MASTER LIST ════════════════════
 function renderMaster(){
-  const grid = document.getElementById('masterGrid');
-  grid.innerHTML = masterList.map((o,i)=>`
+  const html = masterList.map((o,i)=>`
     <div class="master-row">
       <span class="master-num">${i+1}</span>
       <span class="master-name">${o[0]}</span>
       <span class="master-desig">${o[1]}</span>
       <button class="master-rm" onclick="removeOfficer(${i})">×</button>
     </div>`).join('');
-  document.getElementById('masterCount').textContent = masterList.length+' officers';
+  // Update both daily (Setup tab) and weekly tab grids
+  const g1 = document.getElementById('masterGrid');
+  const g2 = document.getElementById('wMasterGrid');
+  if(g1) g1.innerHTML = html;
+  if(g2) g2.innerHTML = html;
+  const countTxt = masterList.length+' officers';
+  const c1 = document.getElementById('masterCount');
+  const c2 = document.getElementById('wMasterCount');
+  if(c1) c1.textContent = countTxt;
+  if(c2) c2.textContent = countTxt;
 }
 function addOfficer(){
   const n=document.getElementById('newName').value.trim().toUpperCase();
@@ -842,6 +869,17 @@ function addOfficer(){
 }
 function removeOfficer(i){masterList.splice(i,1);renderMaster();}
 function clearMaster(){if(confirm('Clear entire master list?')){masterList=[];renderMaster();}}
+// Weekly tab master-list helpers (use the same masterList & renderMaster)
+function wAddOfficer(){
+  const n=document.getElementById('wNewName').value.trim().toUpperCase();
+  const d=document.getElementById('wNewDesig').value.trim().toUpperCase();
+  if(!n||!d){alert('Enter both name and designation.');return;}
+  masterList.push([n,d]);
+  document.getElementById('wNewName').value='';
+  document.getElementById('wNewDesig').value='';
+  renderMaster();
+}
+function wClearMaster(){if(confirm('Clear entire master list?')){masterList=[];renderMaster();}}
 
 // ═══════════════════ PARSE DATA ════════════════════
 function getColIdx(id){return parseInt(document.getElementById(id).value)||0;}
