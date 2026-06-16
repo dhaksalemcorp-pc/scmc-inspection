@@ -30,7 +30,6 @@
 html{font-size:15px;scroll-behavior:smooth}
 body{font-family:var(--font-body);background:var(--mist);color:var(--ink);min-height:100vh;}
 
-/* ── HEADER ── */
 .app-header{
   background:linear-gradient(135deg, #0D47A1 0%, #1565C0 50%, #1976D2 100%);
   padding:0;
@@ -52,12 +51,6 @@ body{font-family:var(--font-body);background:var(--mist);color:var(--ink);min-he
   box-shadow:0 4px 16px rgba(0,0,0,.3);
 }
 .logo-wrap img{width:58px;height:58px;object-fit:contain;}
-.logo-placeholder{
-  width:58px;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  font-size:8px;font-family:var(--font-head);color:var(--crimson);font-weight:700;text-align:center;
-  line-height:1.2;
-}
-.header-text{}
 .header-text h1{
   font-family:var(--font-head);font-size:1.6rem;font-weight:700;color:white;
   letter-spacing:1px;line-height:1;
@@ -72,7 +65,6 @@ body{font-family:var(--font-body);background:var(--mist);color:var(--ink);min-he
 .header-badge span{display:block;font-size:.65rem;color:rgba(255,255,255,.6);letter-spacing:1px;text-transform:uppercase;}
 .header-badge strong{font-family:var(--font-head);font-size:1.1rem;color:white;letter-spacing:.5px;}
 
-/* ── TABS ── */
 .tabs-bar{
   background:#1565C0;display:flex;gap:0;
   border-top:1px solid rgba(255,255,255,.1);
@@ -86,12 +78,10 @@ body{font-family:var(--font-body);background:var(--mist);color:var(--ink);min-he
 .tab-btn:hover{color:rgba(255,255,255,.9);}
 .tab-btn.active{color:white;border-bottom:3px solid rgba(255,255,255,.9);}
 
-/* ── MAIN LAYOUT ── */
 .app-body{max-width:1200px;margin:0 auto;padding:24px 20px;}
 .tab-panel{display:none;}
 .tab-panel.active{display:block;}
 
-/* ── CARDS ── */
 .card{
   background:white;border-radius:10px;
   border:1px solid var(--line);margin-bottom:20px;overflow:hidden;
@@ -108,7 +98,6 @@ body{font-family:var(--font-body);background:var(--mist);color:var(--ink);min-he
 .card-icon svg{width:12px;height:12px;fill:white;}
 .card-body{padding:20px;}
 
-/* ── OFFICER MASTER TABLE ── */
 .section-label{
   font-family:var(--font-head);font-size:.75rem;font-weight:600;
   color:#1565C0;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;
@@ -153,7 +142,6 @@ body{font-family:var(--font-body);background:var(--mist);color:var(--ink);min-he
 .btn-success:hover{background:#135529;}
 .btn-lg{padding:10px 28px;font-size:1rem;}
 
-/* ── PASTE AREA ── */
 .paste-area{
   width:100%;min-height:180px;padding:14px;
   border:2px dashed #BBDEFB;border-radius:8px;
@@ -170,7 +158,6 @@ body{font-family:var(--font-body);background:var(--mist);color:var(--ink);min-he
 .parse-status.ok{background:var(--success-bg);color:var(--success);display:block;}
 .parse-status.err{background:var(--warn-bg);color:var(--warn);display:block;}
 
-/* ── DATE ROW ── */
 .date-row{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
 .date-row label{font-size:.82rem;font-weight:600;color:var(--slate);}
 .date-input{
@@ -179,7 +166,6 @@ body{font-family:var(--font-body);background:var(--mist);color:var(--ink);min-he
 }
 .date-input:focus{border-color:#1565C0;}
 
-/* ── STATS STRIP ── */
 .stats-strip{
   display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;
 }
@@ -198,7 +184,6 @@ body{font-family:var(--font-body);background:var(--mist);color:var(--ink);min-he
 .stat-num.orange{color:#B7410E;}
 .stat-label{font-size:.72rem;color:#888;letter-spacing:.5px;text-transform:uppercase;margin-top:4px;}
 
-/* ── PREVIEW TABLE ── */
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:.8rem;}
 th{
@@ -228,7 +213,6 @@ tr:hover td{background:#E3F2FD;}
   padding:2px 7px;font-size:.7rem;font-weight:600;
 }
 
-/* ── CHARTS ── */
 .chart-panel{background:white;border-radius:10px;border:1px solid var(--line);margin-bottom:14px;overflow:hidden;box-shadow:0 2px 8px rgba(21,101,192,.07);}
 .chart-tabs{display:flex;border-bottom:1px solid var(--line);background:#F0F7FF;}
 .chart-tab{
@@ -244,11 +228,9 @@ tr:hover td{background:#E3F2FD;}
 .chart-pane.active{display:block;}
 .chart-pane canvas{width:100%!important;height:210px!important;}
 .chart-sub{font-family:var(--font-head);font-size:.68rem;color:#bbb;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
-/* carousel dots */
 .cdot{width:7px;height:7px;border-radius:50%;background:#BBDEFB;cursor:pointer;display:inline-block;transition:background .2s;}
 .cdot.active{background:#1565C0;}
 
-/* ── GENERATE SECTION ── */
 .gen-bar{
   display:flex;align-items:center;gap:12px;padding:16px 20px;
   background:linear-gradient(90deg,#1565C0,#1976D2);
@@ -258,7 +240,6 @@ tr:hover td{background:#E3F2FD;}
 .btn-white{background:white;color:#1565C0;font-family:var(--font-head);font-weight:700;}
 .btn-white:hover{background:var(--crimson-light);}
 
-/* ── RESPONSIVE ── */
 @media(max-width:700px){
   .stats-strip{grid-template-columns:repeat(2,1fr);}
   .charts-row{grid-template-columns:1fr;}
@@ -266,7 +247,6 @@ tr:hover td{background:#E3F2FD;}
   .app-body{padding:14px 10px;}
 }
 
-/* ── PRINT / PDF preview ── */
 #pdfPreview{
   display:none;
   position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;
@@ -282,7 +262,6 @@ tr:hover td{background:#E3F2FD;}
   font-size:22px;cursor:pointer;color:#666;
 }
 
-/* loading */
 .loading-overlay{
   display:none;position:fixed;inset:0;background:rgba(255,255,255,.8);
   z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:12px;
@@ -298,16 +277,14 @@ tr:hover td{background:#E3F2FD;}
 </head>
 <body>
 
-<!-- LOADING -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
   <p style="font-family:var(--font-head);color:var(--crimson);font-size:1rem;letter-spacing:1px;">GENERATING PDF...</p>
 </div>
 
-<!-- HEADER -->
 <div class="app-header">
   <div class="header-inner">
-    <div class="logo-wrap"><img src="data:image/jpeg;base64,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" alt="SCMC Logo" style="width:58px;height:58px;object-fit:contain;"/></div>
+    <div class="logo-wrap"><img src="data:image/jpeg;base64,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" alt="SCMC Logo" style="width:58px;height:58px;object-fit:contain;"/></div>
     <div class="header-text">
       <h1>SALEM CITY MUNICIPAL CORPORATION</h1>
       <p>DAILY FIELD INSPECTION REPORT GENERATOR &nbsp;|&nbsp; PC TO COMMISSIONER OFFICE</p>
@@ -317,7 +294,6 @@ tr:hover td{background:#E3F2FD;}
       <strong id="modeBadgeVal">Daily</strong>
     </div>
   </div>
-  <!-- Mode selector bar -->
   <div style="background:#0D47A1;padding:6px 20px;display:flex;align-items:center;gap:12px;border-top:1px solid rgba(255,255,255,.1);position:relative;z-index:1;">
     <span style="font-family:var(--font-head);font-size:.7rem;color:rgba(255,255,255,.5);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0;">REPORT MODE:</span>
     <div style="display:flex;border-radius:6px;overflow:hidden;border:1.5px solid rgba(255,255,255,.3);">
@@ -329,7 +305,6 @@ tr:hover td{background:#E3F2FD;}
         onclick="setMode('weekly')">📅 WEEKLY</button>
     </div>
   </div>
-  <!-- Tabs bar -->
   <div class="tabs-bar" style="padding:0 16px;">
     <div id="dailyTabs" style="display:flex;">
       <button class="tab-btn active" id="tbtn-setup" onclick="switchTab('setup')">⚙ Setup</button>
@@ -344,9 +319,8 @@ tr:hover td{background:#E3F2FD;}
 
 <div class="app-body">
 
-<!-- ═══════════════════════════════════════════ TAB 1: SETUP ═══ -->
+<!-- TAB 1: SETUP -->
 <div class="tab-panel active" id="tab-setup">
-
   <div class="card">
     <div class="card-head">
       <div class="card-icon"><svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5A5.5 5.5 0 118 2.5a5.5 5.5 0 010 11z"/></svg></div>
@@ -394,12 +368,10 @@ tr:hover td{background:#E3F2FD;}
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- ═══════════════════════════════════════════ TAB 2: PASTE ═══ -->
+<!-- TAB 2: PASTE -->
 <div class="tab-panel" id="tab-paste">
-
   <div class="card">
     <div class="card-head">
       <div class="card-icon"><svg viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="14" rx="1"/><path d="M6 1v2h4V1"/></svg></div>
@@ -441,65 +413,50 @@ tr:hover td{background:#E3F2FD;}
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- ═══════════════════════════════════════════ TAB 3: PREVIEW ═══ -->
+<!-- TAB 3: PREVIEW -->
 <div class="tab-panel" id="tab-preview">
 
-  <!-- Stats -->
   <div class="stats-strip" id="statsStrip">
     <div class="stat-box"><div class="stat-num blue" id="s_total">0</div><div class="stat-label">Total Entries</div></div>
     <div class="stat-box"><div class="stat-num green" id="s_submitted">0</div><div class="stat-label">Officers Submitted</div></div>
-    <div class="stat-box"><div class="stat-num red" id="s_defaulters">0</div><div class="stat-label">Defaulters</div></div>
+    <div class="stat-box"><div class="stat-num red" id="s_defaulters">0</div><div class="stat-label">Not Submitted</div></div>
     <div class="stat-box"><div class="stat-num orange" id="s_coverage">0%</div><div class="stat-label">Coverage</div></div>
   </div>
 
-  <!-- Analytics block: toggle between text dashboard and chart carousel -->
   <div id="analyticsBlock" style="margin-bottom:14px;">
-
-    <!-- Toggle bar -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <span style="font-family:var(--font-head);font-size:.72rem;color:#888;letter-spacing:.5px;text-transform:uppercase;">Analytics View:</span>
       <button id="btnDash" onclick="setAnalyticsView('dash')" style="padding:4px 14px;border-radius:20px;border:1.5px solid #1565C0;background:#1565C0;color:white;font-family:var(--font-head);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;">Dashboard</button>
       <button id="btnChart" onclick="setAnalyticsView('chart')" style="padding:4px 14px;border-radius:20px;border:1.5px solid #1565C0;background:white;color:#1565C0;font-family:var(--font-head);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;">Charts</button>
     </div>
 
-    <!-- ── TEXT DASHBOARD (default) ── -->
     <div id="viewDash">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-
-        <!-- All officers -->
         <div style="background:white;border-radius:8px;border:1px solid var(--line);padding:10px 14px;">
           <div style="font-family:var(--font-head);font-size:.72rem;color:#1565C0;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #E3F2FD;padding-bottom:5px;margin-bottom:8px;">👥 All Officers — Inspection Count</div>
           <div id="topPerformers" style="font-size:.78rem;max-height:200px;overflow-y:auto;padding-right:4px;"></div>
         </div>
-
-        <!-- Zone breakdown -->
         <div style="background:white;border-radius:8px;border:1px solid var(--line);padding:10px 14px;">
           <div style="font-family:var(--font-head);font-size:.72rem;color:#1565C0;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #E3F2FD;padding-bottom:5px;margin-bottom:8px;">🗺 Zone Breakdown</div>
           <div id="zoneBreakdown" style="font-size:.78rem;"></div>
         </div>
-
       </div>
     </div>
 
-    <!-- ── CHART CAROUSEL (hidden by default) ── -->
     <div id="viewChart" style="display:none;">
       <div style="background:white;border-radius:8px;border:1px solid var(--line);overflow:hidden;">
-        <!-- Carousel nav -->
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#F0F7FF;border-bottom:1px solid var(--line);">
           <button onclick="prevChart()" style="background:none;border:1.5px solid #BBDEFB;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;color:#1565C0;display:flex;align-items:center;justify-content:center;">‹</button>
           <span id="chartLabel" style="font-family:var(--font-head);font-size:.82rem;font-weight:600;color:#1565C0;letter-spacing:.5px;"></span>
           <button onclick="nextChart()" style="background:none;border:1.5px solid #BBDEFB;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;color:#1565C0;display:flex;align-items:center;justify-content:center;">›</button>
         </div>
-        <!-- Dots -->
         <div style="display:flex;justify-content:center;gap:6px;padding:6px 0 2px;">
           <span class="cdot active" onclick="goChart(0)"></span>
           <span class="cdot" onclick="goChart(1)"></span>
           <span class="cdot" onclick="goChart(2)"></span>
         </div>
-        <!-- Chart panes -->
         <div style="padding:10px 14px 14px;">
           <div id="cpane-0" class="cpane active"><canvas id="barChart" style="width:100%;height:180px;display:block;"></canvas></div>
           <div id="cpane-1" class="cpane" style="display:none;"><canvas id="pieChart" style="width:100%;height:180px;display:block;"></canvas></div>
@@ -507,8 +464,7 @@ tr:hover td{background:#E3F2FD;}
         </div>
       </div>
     </div>
-
-  </div><!-- /analyticsBlock -->
+  </div>
 
   <!-- Officer Table -->
   <div class="card">
@@ -532,11 +488,11 @@ tr:hover td{background:#E3F2FD;}
     </div>
   </div>
 
-  <!-- Defaulters -->
+  <!-- Officers Not Submitted Report -->
   <div class="card">
     <div class="card-head" style="background:linear-gradient(90deg,#FFF0F0,white);">
       <div class="card-icon" style="background:var(--crimson-mid);"><svg viewBox="0 0 16 16"><path d="M8 1L1 14h14L8 1zm0 3l4.5 8h-9L8 4zm-.5 3v3h1V7h-1zm0 4v1h1v-1h-1z" fill="white"/></svg></div>
-      <h2 style="color:var(--crimson-mid);">DEFAULTERS — INSPECTION NOT SUBMITTED</h2>
+      <h2 style="color:var(--crimson-mid);">OFFICERS NOT SUBMITTED REPORT</h2>
       <span id="defCount" style="margin-left:auto;font-size:.75rem;color:var(--crimson);">0 officers</span>
     </div>
     <div class="card-body" style="padding:0;">
@@ -554,7 +510,6 @@ tr:hover td{background:#E3F2FD;}
     </div>
   </div>
 
-  <!-- Generate -->
   <div class="gen-bar">
     <button class="btn" onclick="switchTab('paste')" style="background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.3);font-size:.8rem;">← Back to Paste</button>
     <p>Report is ready. Click Generate PDF to download the printable daily inspection report.</p>
@@ -563,10 +518,9 @@ tr:hover td{background:#E3F2FD;}
 
 </div><!-- /tab-preview -->
 
-<!-- ═══════════════════════════════════════════ TAB 4: WEEKLY ═══ -->
+<!-- TAB 4: WEEKLY -->
 <div class="tab-panel" id="tab-weekly">
 
-  <!-- ── MASTER LIST CARD (weekly) ── -->
   <div class="card">
     <div class="card-head">
       <div class="card-icon"><svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5A5.5 5.5 0 118 2.5a5.5 5.5 0 010 11z"/></svg></div>
@@ -574,7 +528,7 @@ tr:hover td{background:#E3F2FD;}
       <span style="margin-left:auto;font-size:.75rem;color:#888;" id="wMasterCount">0 officers</span>
     </div>
     <div class="card-body">
-      <p class="paste-hint" style="margin-bottom:12px;">Officers listed here are used to identify chronic defaulters in the weekly report. Changes sync with the Setup tab roster.</p>
+      <p class="paste-hint" style="margin-bottom:12px;">Officers listed here are used to identify those who have not submitted reports in the weekly summary. Changes sync with the Setup tab roster.</p>
       <div class="master-grid" id="wMasterGrid"></div>
       <div class="add-officer-row" style="margin-top:14px;">
         <input class="input-sm" id="wNewName" placeholder="Officer Name" style="min-width:180px;"/>
@@ -585,7 +539,6 @@ tr:hover td{background:#E3F2FD;}
     </div>
   </div>
 
-  <!-- Paste card -->
   <div class="card">
     <div class="card-head">
       <div class="card-icon"><svg viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" rx="1"/><path d="M5 1v2M11 1v2M1 6h14" stroke="white" stroke-width="1.2" fill="none"/></svg></div>
@@ -615,15 +568,13 @@ tr:hover td{background:#E3F2FD;}
     </div>
   </div>
 
-  <!-- Weekly stats strip -->
   <div class="stats-strip" id="wStatsStrip" style="display:none;">
     <div class="stat-box"><div class="stat-num blue" id="ws_total">0</div><div class="stat-label">Total Entries</div></div>
     <div class="stat-box"><div class="stat-num blue" id="ws_days">0</div><div class="stat-label">Working Days</div></div>
     <div class="stat-box"><div class="stat-num green" id="ws_active">0</div><div class="stat-label">Active Officers</div></div>
-    <div class="stat-box"><div class="stat-num red" id="ws_chronic">0</div><div class="stat-label">Chronic Defaulters</div></div>
+    <div class="stat-box"><div class="stat-num red" id="ws_chronic">0</div><div class="stat-label">Not Submitted Report</div></div>
   </div>
 
-  <!-- Day-wise trend -->
   <div class="card" id="wTrendCard" style="display:none;">
     <div class="card-head">
       <div class="card-icon"><svg viewBox="0 0 16 16"><polyline points="1,12 5,6 9,9 13,3 15,5" stroke="white" stroke-width="1.5" fill="none"/></svg></div>
@@ -634,10 +585,7 @@ tr:hover td{background:#E3F2FD;}
     </div>
   </div>
 
-  <!-- Two column: zone summary + officer consistency -->
   <div style="display:none;grid-template-columns:1fr 1fr;gap:12px;" id="wMidRow">
-
-    <!-- Zone weekly summary -->
     <div class="card">
       <div class="card-head">
         <div class="card-icon"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="white" stroke-width="1.5" fill="none"/><path d="M8 2v12M2 8h12" stroke="white" stroke-width="1"/></svg></div>
@@ -645,8 +593,6 @@ tr:hover td{background:#E3F2FD;}
       </div>
       <div class="card-body" style="padding:12px 16px;" id="wZoneBody"></div>
     </div>
-
-    <!-- Officer consistency heatmap-style -->
     <div class="card">
       <div class="card-head">
         <div class="card-icon"><svg viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg></div>
@@ -655,10 +601,8 @@ tr:hover td{background:#E3F2FD;}
       </div>
       <div class="card-body" style="padding:10px 14px;max-height:260px;overflow-y:auto;" id="wConsistencyBody"></div>
     </div>
-
   </div>
 
-  <!-- Officer weekly summary table -->
   <div class="card" id="wOfficerCard" style="display:none;">
     <div class="card-head">
       <div class="card-icon"><svg viewBox="0 0 16 16"><path d="M8 2a3 3 0 100 6A3 3 0 008 2zM4 12c0-2 1.8-3.5 4-3.5S12 10 12 12v1H4v-1z"/></svg></div>
@@ -683,11 +627,11 @@ tr:hover td{background:#E3F2FD;}
     </div>
   </div>
 
-  <!-- Chronic defaulters -->
+  <!-- Officers Not Submitted Report — Weekly -->
   <div class="card" id="wDefaulterCard" style="display:none;">
     <div class="card-head" style="background:linear-gradient(90deg,#FFF0F0,white);">
       <div class="card-icon" style="background:#C0392B;"><svg viewBox="0 0 16 16"><path d="M8 1L1 14h14L8 1zm0 3l4.5 8h-9L8 4zm-.5 3v3h1V7h-1zm0 4v1h1v-1h-1z" fill="white"/></svg></div>
-      <h2 style="color:#C0392B;">CHRONIC DEFAULTERS — MISSED 3+ DAYS</h2>
+      <h2 style="color:#C0392B;">OFFICERS NOT SUBMITTED REPORT (MISSED 3+ DAYS)</h2>
       <span id="wDefCount" style="margin-left:auto;font-size:.75rem;color:#C0392B;">0 officers</span>
     </div>
     <div class="card-body" style="padding:0;">
@@ -703,7 +647,6 @@ tr:hover td{background:#E3F2FD;}
     </div>
   </div>
 
-  <!-- Generate bar -->
   <div class="gen-bar" id="wGenBar" style="display:none;">
     <p>Weekly report ready. Click to download the PDF.</p>
     <button class="btn btn-white btn-lg" onclick="generateWeeklyPDF()">⬇ Generate Weekly PDF</button>
@@ -713,7 +656,6 @@ tr:hover td{background:#E3F2FD;}
 </div><!-- /app-body -->
 
 <script>
-// ═══════════════════ DEFAULT MASTER LIST ════════════════════
 const DEFAULT_MASTER = [
   ["KOTTAI KUMAR","DEPUTY COMMISSIONER"],
   ["MAHESHWARI","DEPUTY COMMISSIONER"],
@@ -769,25 +711,20 @@ const DEFAULT_MASTER = [
 let masterList = JSON.parse(JSON.stringify(DEFAULT_MASTER));
 let parsedData = [];
 let chartBar=null, chartPie=null, chartDonut=null;
-let currentMode = 'daily'; // declare here so all functions can access it
-// LOGO_B64 is extracted once from the header img so both PDF generators can use it
+let currentMode = 'daily';
 const LOGO_B64 = (function(){ const img = document.querySelector('.logo-wrap img'); return img ? img.src : ''; })();
 
-// ═══════════════════ INIT ════════════════════
 window.onload = function(){
   renderMaster();
-  // Daily date
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
   const rdEl = document.getElementById('reportDate');
   if(rdEl) rdEl.value = todayStr;
-  // Week dates
   const day = today.getDay();
   const monday = new Date(today); monday.setDate(today.getDate()-(day===0?6:day-1));
   const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
   const wfEl = document.getElementById('weekFrom'); if(wfEl) wfEl.value = monday.toISOString().split('T')[0];
   const wtEl = document.getElementById('weekTo');   if(wtEl) wtEl.value = sunday.toISOString().split('T')[0];
-  // Init mode (sets badge, tabs, active state)
   setMode('daily');
 };
 
@@ -796,49 +733,36 @@ function updateHeaderDate(){
   if(d){
     const dt = new Date(d+'T00:00:00');
     const label = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-    // show date in badge if daily mode
     const badge = document.getElementById('modeBadgeVal');
     if(badge && currentMode==='daily') badge.textContent = label;
   }
 }
 
-// ═══════════════════ MODE SELECTOR ════════════════════
 function setMode(mode){
   currentMode = mode;
   const isDaily = mode === 'daily';
-
-  // Mode button styles
   const md = document.getElementById('modeDaily');
   const mw = document.getElementById('modeWeekly');
   if(md){ md.style.background = isDaily ? 'white' : 'transparent'; md.style.color = isDaily ? '#0D47A1' : 'rgba(255,255,255,.6)'; }
   if(mw){ mw.style.background = isDaily ? 'transparent' : 'white'; mw.style.color = isDaily ? 'rgba(255,255,255,.6)' : '#0D47A1'; }
-
-  // Badge
   const badge = document.getElementById('modeBadgeVal');
   if(badge) badge.textContent = isDaily ? 'Daily' : 'Weekly';
-
-  // Show/hide tab groups
   const dt = document.getElementById('dailyTabs');
   const wt = document.getElementById('weeklyTabs');
   if(dt) dt.style.display = isDaily ? 'flex' : 'none';
   if(wt) wt.style.display = isDaily ? 'none' : 'flex';
-
-  // Switch to correct tab
   switchTab(isDaily ? 'setup' : 'weekly');
 }
 
-// ═══════════════════ TABS ════════════════════
 function switchTab(name){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
-  // Highlight correct tab button
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   const tbtn = document.getElementById('tbtn-'+name);
   if(tbtn) tbtn.classList.add('active');
   if(name==='preview') buildPreview();
 }
 
-// ═══════════════════ MASTER LIST ════════════════════
 function renderMaster(){
   const html = masterList.map((o,i)=>`
     <div class="master-row">
@@ -847,7 +771,6 @@ function renderMaster(){
       <span class="master-desig">${o[1]}</span>
       <button class="master-rm" onclick="removeOfficer(${i})">×</button>
     </div>`).join('');
-  // Update both daily (Setup tab) and weekly tab grids
   const g1 = document.getElementById('masterGrid');
   const g2 = document.getElementById('wMasterGrid');
   if(g1) g1.innerHTML = html;
@@ -869,7 +792,6 @@ function addOfficer(){
 }
 function removeOfficer(i){masterList.splice(i,1);renderMaster();}
 function clearMaster(){if(confirm('Clear entire master list?')){masterList=[];renderMaster();}}
-// Weekly tab master-list helpers (use the same masterList & renderMaster)
 function wAddOfficer(){
   const n=document.getElementById('wNewName').value.trim().toUpperCase();
   const d=document.getElementById('wNewDesig').value.trim().toUpperCase();
@@ -881,7 +803,6 @@ function wAddOfficer(){
 }
 function wClearMaster(){if(confirm('Clear entire master list?')){masterList=[];renderMaster();}}
 
-// ═══════════════════ PARSE DATA ════════════════════
 function getColIdx(id){return parseInt(document.getElementById(id).value)||0;}
 
 function parseData(){
@@ -889,7 +810,6 @@ function parseData(){
   if(!raw){parsedData=[];return;}
   const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
   if(lines.length<2){showStatus('err','Need at least a header row + 1 data row.');return;}
-  
   const ci = {
     ts:   getColIdx('col_ts'),
     name: getColIdx('col_name'),
@@ -899,11 +819,8 @@ function parseData(){
     insp: getColIdx('col_insp'),
     rem:  getColIdx('col_rem'),
   };
-
-  // Detect header row
   const headerRow = lines[0].toLowerCase();
   const dataStart = (headerRow.includes('name') || headerRow.includes('officer') || headerRow.includes('timestamp')) ? 1 : 0;
-
   parsedData = [];
   for(let i=dataStart;i<lines.length;i++){
     const cols = lines[i].split('\t');
@@ -917,7 +834,6 @@ function parseData(){
     if(!name||!insp) continue;
     parsedData.push({name,desig,zone,ward,insp,rem});
   }
-
   if(parsedData.length===0){showStatus('err','No valid data rows found. Check column mapping.');return;}
   showStatus('ok',`✔ ${parsedData.length} inspection entries parsed from ${new Set(parsedData.map(r=>r.name)).size} officers.`);
 }
@@ -927,13 +843,10 @@ function showStatus(type,msg){
   el.className='parse-status '+type;
   el.textContent=msg;
 }
-
 function clearPaste(){document.getElementById('pasteBox').value='';parsedData=[];document.getElementById('parseStatus').className='parse-status';}
 
-// ═══════════════════ BUILD PREVIEW ════════════════════
 function buildPreview(){
   if(!parsedData.length){
-    // Just clear
     document.getElementById('s_total').textContent='0';
     document.getElementById('s_submitted').textContent='0';
     document.getElementById('s_defaulters').textContent='0';
@@ -943,7 +856,6 @@ function buildPreview(){
     return;
   }
 
-  // ── Aggregation
   const byOfficer={};
   parsedData.forEach(r=>{
     if(!byOfficer[r.name]) byOfficer[r.name]={desig:r.desig,zone:r.zone,inspections:[],remarks:[]};
@@ -952,36 +864,31 @@ function buildPreview(){
   });
 
   const submittedNames = new Set(Object.keys(byOfficer));
-  const defaulters = masterList.filter(m=>!submittedNames.has(m[0]));
+  const notSubmitted = masterList.filter(m=>!submittedNames.has(m[0]));
   const total = parsedData.length;
   const submitted = submittedNames.size;
   const coverage = masterList.length ? Math.round(submitted/masterList.length*100) : 0;
 
-  // Stats
   document.getElementById('s_total').textContent=total;
   document.getElementById('s_submitted').textContent=submitted;
-  document.getElementById('s_defaulters').textContent=defaulters.length;
+  document.getElementById('s_defaulters').textContent=notSubmitted.length;
   document.getElementById('s_coverage').textContent=coverage+'%';
-  document.getElementById('defCount').textContent=defaulters.length+' officers';
+  document.getElementById('defCount').textContent=notSubmitted.length+' officers';
 
-  // Zone counts
   const zoneCounts={};
   parsedData.forEach(r=>{
     const z=r.zone||'UNKNOWN';
     zoneCounts[z]=(zoneCounts[z]||0)+1;
   });
 
-  // ── Charts + Dashboard
-  buildCharts(byOfficer, zoneCounts, submitted, defaulters.length);
-  buildDashboard(byOfficer, zoneCounts, submitted, defaulters.length);
-  setAnalyticsView('dash'); // default to text dashboard
+  buildCharts(byOfficer, zoneCounts, submitted, notSubmitted.length);
+  buildDashboard(byOfficer, zoneCounts, submitted, notSubmitted.length);
+  setAnalyticsView('dash');
 
-  // ── Officer table
   const sorted = Object.entries(byOfficer).sort((a,b)=>b[1].inspections.length-a[1].inspections.length);
   const tb = document.getElementById('officerTableBody');
   tb.innerHTML = sorted.map(([name,info],i)=>{
     const zbadge = zBadge(info.zone);
-    // deduplicate inspections
     const unique = [...new Set(info.inspections)];
     const inspHtml = unique.map(x=>`<span style="display:inline-block;background:#f5f5f5;border-radius:3px;padding:1px 6px;margin:1px;font-size:.72rem;">${x}</span>`).join(' ');
     return `<tr>
@@ -994,15 +901,15 @@ function buildPreview(){
     </tr>`;
   }).join('');
 
-  // ── Defaulter table
+  // Officers Not Submitted Report table
   const dtb = document.getElementById('defaulterTableBody');
-  dtb.innerHTML = defaulters.map((d,i)=>`
+  dtb.innerHTML = notSubmitted.map((d,i)=>`
     <tr class="def-row">
       <td style="font-family:var(--font-mono);font-size:.72rem;color:#aaa;">${i+1}</td>
       <td style="font-weight:600;color:var(--crimson);">${d[0]}</td>
       <td style="font-size:.77rem;color:#666;">${d[1]}</td>
-      <td><span class="def-badge">⚠ Not Submitted</span></td>
-    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--success);padding:12px;">✔ All officers submitted</td></tr>';
+      <td><span class="def-badge">⚠ Report Not Submitted</span></td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--success);padding:12px;">✔ All officers have submitted their reports</td></tr>';
 }
 
 function zBadge(zone){
@@ -1014,7 +921,6 @@ function zBadge(zone){
   return `<span class="zone-badge" style="background:#eee;color:#555;">${zone}</span>`;
 }
 
-// ── Analytics view toggle ──────────────────────────────
 let currentChart = 0;
 const chartNames = ['Officer-wise Count (Top 10)','Zone Distribution','Staff Coverage'];
 
@@ -1043,12 +949,8 @@ function goChart(n){
 function nextChart(){ goChart((currentChart+1)%3); }
 function prevChart(){ goChart((currentChart+2)%3); }
 
-// ── Build dashboard text ───────────────────────────────
-function buildDashboard(byOfficer, zoneCounts, submitted, defCount){
+function buildDashboard(byOfficer, zoneCounts, submitted, notSubCount){
   const sorted = Object.entries(byOfficer).sort((a,b)=>b[1].inspections.length-a[1].inspections.length);
-  const total = masterList.length||1;
-
-  // All officers ranked
   const maxCount = sorted[0]?.[1].inspections.length || 1;
   const topHtml = sorted.map(([name,info],i)=>{
     const pct = Math.round(info.inspections.length / maxCount * 100);
@@ -1067,10 +969,8 @@ function buildDashboard(byOfficer, zoneCounts, submitted, defCount){
       </div>
     </div>`;
   }).join('');
-  document.getElementById('topPerformers').innerHTML = topHtml ||
-    '<div style="color:#aaa;font-size:.78rem;">No data</div>';
+  document.getElementById('topPerformers').innerHTML = topHtml || '<div style="color:#aaa;font-size:.78rem;">No data</div>';
 
-  // Zone breakdown — bar-style rows
   const zTotal = Object.values(zoneCounts).reduce((a,b)=>a+b,0)||1;
   const zColors = {'HASTH':'#E63946','SURAM':'#2A9D8F','AMMAP':'#E9C46A','KOND':'#6A4C93'};
   const zoneHtml = Object.entries(zoneCounts).sort((a,b)=>b[1]-a[1]).map(([z,cnt])=>{
@@ -1086,11 +986,10 @@ function buildDashboard(byOfficer, zoneCounts, submitted, defCount){
       </div>
     </div>`;
   }).join('');
-  document.getElementById('zoneBreakdown').innerHTML = zoneHtml ||
-    '<div style="color:#aaa;font-size:.78rem;">No data</div>';
+  document.getElementById('zoneBreakdown').innerHTML = zoneHtml || '<div style="color:#aaa;font-size:.78rem;">No data</div>';
 }
 
-function buildCharts(byOfficer, zoneCounts, submitted, defCount){
+function buildCharts(byOfficer, zoneCounts, submitted, notSubCount){
   const sorted = Object.entries(byOfficer).sort((a,b)=>b[1].inspections.length-a[1].inspections.length);
   const topN = sorted.slice(0,10);
   const labels = topN.map(e=>e[0]);
@@ -1129,7 +1028,7 @@ function buildCharts(byOfficer, zoneCounts, submitted, defCount){
   const total = masterList.length||1;
   chartDonut = new Chart(ctxD,{
     type:'doughnut',
-    data:{labels:['Submitted','Defaulters'],datasets:[{data:[submitted,defCount],backgroundColor:['#1A6B3A','#C0392B'],borderWidth:3,borderColor:'white'}]},
+    data:{labels:['Submitted','Not Submitted Report'],datasets:[{data:[submitted,notSubCount],backgroundColor:['#1A6B3A','#C0392B'],borderWidth:3,borderColor:'white'}]},
     options:{
       cutout:'65%',
       plugins:{
@@ -1140,11 +1039,9 @@ function buildCharts(byOfficer, zoneCounts, submitted, defCount){
     }
   });
 
-  // init carousel label
   document.getElementById('chartLabel').textContent = chartNames[0];
 }
 
-// ═══════════════════ SAMPLE DATA ════════════════════
 function loadSampleData(){
   const sample = `Timestamp\tNAME OF THE OFFICER\tDESIGNATION\tZONE NAME\tWARD NO\tINSPECTION & SITE VISIT\tPHOTO / FILE UPLOAD\tREMARKS
 06/02/2025 07:20:33\tA.GOPINATH\tSANITARY INSPECTOR\tSURAMANGALAM\t18\tDOOR TO DOOR COLLECTION\thttps://drive.google.com/\tSegregated wet waste collection
@@ -1167,7 +1064,6 @@ function loadSampleData(){
   parseData();
 }
 
-// ═══════════════════ PDF GENERATION ════════════════════
 async function generatePDF(){
   if(!parsedData.length){alert('No data loaded. Please paste Google Form data first.');return;}
   const overlay = document.getElementById('loadingOverlay');
@@ -1187,7 +1083,6 @@ async function generatePDF(){
     const corpName = document.getElementById('corpName').value;
     const preparedBy = document.getElementById('preparedBy').value;
 
-    // Aggregation
     const byOfficer={};
     parsedData.forEach(r=>{
       if(!byOfficer[r.name]) byOfficer[r.name]={desig:r.desig,zone:r.zone,inspections:[],remarks:[]};
@@ -1197,16 +1092,15 @@ async function generatePDF(){
     const sorted = Object.entries(byOfficer).sort((a,b)=>b[1].inspections.length-a[1].inspections.length);
     const submitted = Object.keys(byOfficer).length;
     const submittedNames = new Set(Object.keys(byOfficer));
-    const defaulters = masterList.filter(m=>!submittedNames.has(m[0]));
+    const notSubmitted = masterList.filter(m=>!submittedNames.has(m[0]));
     const coverage = masterList.length ? Math.round(submitted/masterList.length*100) : 0;
     const zoneCounts={};
     parsedData.forEach(r=>{const z=r.zone||'UNKNOWN';zoneCounts[z]=(zoneCounts[z]||0)+1;});
 
-    // Pre-load logo image before building PDF
     const logoImg = new Image();
     await new Promise(resolve => {
       logoImg.onload = resolve;
-      logoImg.onerror = resolve; // continue even if fails
+      logoImg.onerror = resolve;
       logoImg.src = LOGO_B64;
     });
 
@@ -1227,23 +1121,19 @@ async function generatePDF(){
     }
     const circleLogoPng = drawCircleLogo();
 
-    // ── Helpers
     function newPage(){doc.addPage();y=0;}
 
     function drawHeader(){
-      // Blue header bar
       doc.setFillColor(21,101,192);
       doc.rect(0,0,W,30,'F');
       doc.setFillColor(25,118,210);
       doc.rect(0,28,W,2,'F');
-      // Logo — use pre-rendered circle PNG
       if(circleLogoPng){
         try { doc.addImage(circleLogoPng,'PNG',margin+1,5,18,18); } catch(e){}
       } else {
         doc.setFillColor(255,255,255);
         doc.circle(margin+10,15,9,'F');
       }
-      // SCMC Text (offset right of logo)
       const tx = margin+23;
       doc.setFont('helvetica','bold');
       doc.setFontSize(12);
@@ -1254,7 +1144,6 @@ async function generatePDF(){
       doc.setTextColor(200,225,255);
       doc.text('DAILY FIELD INSPECTION REPORT ABSTRACT', tx, 17);
       doc.text('Salem City Municipal Corporation', tx, 22);
-      // Date block right
       doc.setFontSize(9);
       doc.setFont('helvetica','bold');
       doc.setTextColor(255,255,255);
@@ -1279,33 +1168,29 @@ async function generatePDF(){
 
     function checkPage(needed){if(y+needed>H-16) newPage();}
 
-    // ════ PAGE 1 ════
     drawHeader();
 
-    // ── SUMMARY BOX
+    // Summary boxes
     drawSectionHead('1. DAILY SUMMARY');
     const sx=margin, sw=(W-margin*2)/4;
     const summaryItems=[
       ['TOTAL ENTRIES',parsedData.length,'#1A4A8B'],
       ['OFFICERS SUBMITTED',submitted,'#1A6B3A'],
-      ['DEFAULTERS',defaulters.length,'#C0392B'],
+      ['NOT SUBMITTED',notSubmitted.length,'#C0392B'],
       ['COVERAGE %',coverage+'%','#7D3C1A'],
     ];
     summaryItems.forEach((item,i)=>{
       const bx=sx+i*sw, bw=sw-3;
-      // Card bg
       doc.setFillColor(245,249,255);
       doc.roundedRect(bx,y,bw,20,2,2,'F');
       doc.setDrawColor(220,200,200);
       doc.roundedRect(bx,y,bw,20,2,2,'S');
-      // Number
       const [r,g,b]=hexToRgb(item[2]);
       doc.setFillColor(r,g,b);
       doc.setFont('helvetica','bold');
       doc.setFontSize(16);
       doc.setTextColor(r,g,b);
       doc.text(String(item[1]),bx+bw/2,y+11,{align:'center'});
-      // Label
       doc.setFontSize(6);
       doc.setFont('helvetica','normal');
       doc.setTextColor(100,100,100);
@@ -1313,7 +1198,7 @@ async function generatePDF(){
     });
     y+=26;
 
-    // ── ZONE SUMMARY
+    // Zone summary
     drawSectionHead('2. ZONE-WISE SUMMARY');
     const zones = Object.entries(zoneCounts).sort((a,b)=>b[1]-a[1]);
     const zw=(W-margin*2)/zones.length;
@@ -1336,10 +1221,8 @@ async function generatePDF(){
     });
     y+=22;
 
-    // ── OFFICER TABLE
+    // Officer table
     drawSectionHead('3. OFFICER-WISE INSPECTION DETAIL');
-
-    // Table header
     const cols=[28,40,32,20,W-margin*2-120];
     const colX=[margin,margin+28,margin+68,margin+100,margin+120];
     const hdr=['Name','Designation','Zone','Count','Inspections Carried Out'];
@@ -1366,47 +1249,39 @@ async function generatePDF(){
       const inspStr=uniq.join(' | ');
       const inspLines=doc.splitTextToSize(inspStr,cols[4]-4);
       const rowH=Math.max(8,inspLines.length*4.5+3);
-      // If new page needed, add page + header
       if(y+rowH+2>H-16){ doc.addPage(); y=34; drawHeader(); drawOfficerTableHeader(); }
-
       const bg = idx%2===0 ? [255,255,255] : [248,248,252];
       doc.setFillColor(...bg);
       doc.rect(margin,y,W-margin*2,rowH,'F');
       doc.setDrawColor(230,220,220);
       doc.line(margin,y+rowH,W-margin,y+rowH);
-
       doc.setFont('helvetica','bold');
       doc.setFontSize(7.5);
       doc.setTextColor(26,26,46);
       doc.text(name,colX[0]+1,y+5);
-
       doc.setFont('helvetica','normal');
       doc.setFontSize(6.8);
       doc.setTextColor(80,80,80);
       doc.text(info.desig,colX[1]+1,y+5);
       doc.text(info.zone,colX[2]+1,y+5);
-
-      // Count pill
       doc.setFillColor(21,101,192);
       doc.roundedRect(colX[3],y+1.5,16,5,2,2,'F');
       doc.setFont('helvetica','bold');
       doc.setFontSize(7);
       doc.setTextColor(255,255,255);
       doc.text(String(info.inspections.length),colX[3]+8,y+5.5,{align:'center'});
-
       doc.setFont('helvetica','normal');
       doc.setFontSize(6.5);
       doc.setTextColor(50,50,50);
       doc.text(inspLines,colX[4]+1,y+4.5);
-
       y+=rowH;
     });
     y+=5;
 
-    // ── DEFAULTERS
-    if(defaulters.length>0){
+    // Officers Not Submitted Report section in PDF
+    if(notSubmitted.length>0){
       checkPage(30);
-      drawSectionHead('4. DEFAULTERS — INSPECTION NOT SUBMITTED');
+      drawSectionHead('4. OFFICERS NOT SUBMITTED REPORT');
 
       doc.setFillColor(192,57,43);
       doc.rect(margin,y,W-margin*2,7,'F');
@@ -1418,7 +1293,7 @@ async function generatePDF(){
       });
       y+=8;
 
-      defaulters.forEach((d,i)=>{
+      notSubmitted.forEach((d,i)=>{
         if(y+10>H-16){ doc.addPage(); y=34; drawHeader();
           doc.setFillColor(192,57,43); doc.rect(margin,y,W-margin*2,7,'F');
           doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255);
@@ -1439,13 +1314,12 @@ async function generatePDF(){
         doc.setTextColor(100,100,100);
         doc.text(d[1],margin+80,y+5);
         doc.setTextColor(192,57,43);
-        doc.text('[!] Not Submitted',margin+150,y+5);
+        doc.text('[!] Report Not Submitted',margin+150,y+5);
         y+=7;
       });
       y+=4;
     }
 
-    // ── FOOTER on each page
     const totalPages=doc.internal.getNumberOfPages();
     for(let p=1;p<=totalPages;p++){
       doc.setPage(p);
@@ -1458,7 +1332,6 @@ async function generatePDF(){
       doc.text('Page '+p+' of '+totalPages, W-margin, H-4.5, {align:'right'});
     }
 
-    // Save
     const fname = 'SCMC_FieldInspection_'+reportDateShort.replace(/ /g,'_')+'.pdf';
     doc.save(fname);
   } catch(e){
@@ -1485,10 +1358,7 @@ function getZoneColor(zone){
   return '#555555';
 }
 
-
-// ═══════════════════════════════════════════════════════
-// ══ WEEKLY REPORT MODULE ════════════════════════════════
-// ═══════════════════════════════════════════════════════
+// ═══ WEEKLY MODULE ═══
 let weeklyData = [];
 let chartTrend = null;
 
@@ -1520,13 +1390,11 @@ function parseWeeklyData(){
     const zone  = (cols[ci.zone]||'').trim().toUpperCase();
     const insp  = (cols[ci.insp]||'').trim();
     if(!name||!insp) continue;
-    // Parse date from timestamp
     let dateStr = '';
     try {
       const d = new Date(tsRaw);
       if(!isNaN(d)) dateStr = d.toISOString().split('T')[0];
       else {
-        // try DD/MM/YYYY HH:MM:SS
         const m = tsRaw.match(/(\d{2})\/(\d{2})\/(\d{4})/);
         if(m) dateStr = `${m[3]}-${m[2]}-${m[1]}`;
       }
@@ -1548,12 +1416,10 @@ function showWeeklyStatus(type, msg){
 function buildWeeklyPreview(){
   if(!weeklyData.length){ alert('No data parsed yet.'); return; }
 
-  // ── Aggregate ──────────────────────────────────────
   const days     = [...new Set(weeklyData.map(r=>r.dateStr).filter(Boolean))].sort();
   const nDays    = days.length || 1;
   const totalEntries = weeklyData.length;
 
-  // Officer map: name → {desig, zone, days:Set, count, inspTypes:Set}
   const byOfficer = {};
   weeklyData.forEach(r=>{
     if(!byOfficer[r.name]) byOfficer[r.name]={desig:r.desig, zone:r.zone, days:new Set(), count:0, inspTypes:new Set()};
@@ -1562,7 +1428,6 @@ function buildWeeklyPreview(){
     if(r.dateStr) byOfficer[r.name].days.add(r.dateStr);
   });
 
-  // Zone map
   const byZone = {};
   weeklyData.forEach(r=>{
     const z = r.zone||'UNKNOWN';
@@ -1571,29 +1436,25 @@ function buildWeeklyPreview(){
     byZone[z].officers.add(r.name);
   });
 
-  // Day trend
   const dayTrend = {};
   days.forEach(d=>dayTrend[d]=0);
   weeklyData.forEach(r=>{ if(r.dateStr) dayTrend[r.dateStr]=(dayTrend[r.dateStr]||0)+1; });
 
-  // Chronic defaulters: in master but submitted < (nDays - 2) days
   const activeOfficers = new Set(Object.keys(byOfficer));
-  const chronicThreshold = Math.max(1, nDays - 2); // missed 3+ days means submitted < nDays-2
-  const chronicDefaulters = masterList.filter(m=>{
-    const info = byOfficer[m[0]];
-    const daysSubmitted = info ? info.days.size : 0;
-    return daysSubmitted < (nDays - 2);
-  });
-  const neverSubmitted = masterList.filter(m=>!activeOfficers.has(m[0]));
 
-  // ── Stats strip ────────────────────────────────────
+  // Officers not submitted report (missed 3+ days)
+  const allNotSubmitted = masterList.filter(m=>{
+    const info = byOfficer[m[0]];
+    const d = info ? info.days.size : 0;
+    return d <= nDays - 3;
+  });
+
   document.getElementById('ws_total').textContent   = totalEntries;
   document.getElementById('ws_days').textContent    = nDays;
   document.getElementById('ws_active').textContent  = activeOfficers.size;
-  document.getElementById('ws_chronic').textContent = neverSubmitted.length + chronicDefaulters.filter(m=>activeOfficers.has(m[0])).length;
+  document.getElementById('ws_chronic').textContent = allNotSubmitted.length;
   document.getElementById('wStatsStrip').style.display = 'grid';
 
-  // ── Day trend chart ────────────────────────────────
   document.getElementById('wTrendCard').style.display = '';
   if(chartTrend) chartTrend.destroy();
   const trendLabels = days.map(d=>{
@@ -1627,7 +1488,6 @@ function buildWeeklyPreview(){
     }
   });
 
-  // ── Zone summary ───────────────────────────────────
   document.getElementById('wMidRow').style.display = 'grid';
   const zTotal = Object.values(byZone).reduce((a,b)=>a+b.count,0)||1;
   const zColors2 = {'HASTH':'#E63946','SURAM':'#2A9D8F','AMMAP':'#E9C46A','KOND':'#6A4C93'};
@@ -1648,7 +1508,6 @@ function buildWeeklyPreview(){
       </div>`;
     }).join('');
 
-  // ── Officer consistency ────────────────────────────
   const sortedOfficers = Object.entries(byOfficer).sort((a,b)=>b[1].days.size-a[1].days.size||b[1].count-a[1].count);
   document.getElementById('wConsistencyBody').innerHTML = sortedOfficers.map(([name,info])=>{
     const submitted = info.days.size;
@@ -1670,7 +1529,6 @@ function buildWeeklyPreview(){
     </div>`;
   }).join('');
 
-  // ── Officer weekly table ───────────────────────────
   document.getElementById('wOfficerCard').style.display = '';
   document.getElementById('wOfficerTableBody').innerHTML = sortedOfficers.map(([name,info],i)=>{
     const avg = (info.count/nDays).toFixed(1);
@@ -1688,18 +1546,13 @@ function buildWeeklyPreview(){
     </tr>`;
   }).join('');
 
-  // ── Chronic defaulters ─────────────────────────────
   document.getElementById('wDefaulterCard').style.display = '';
-  const allDefaulters = masterList.filter(m=>{
-    const info = byOfficer[m[0]];
-    const d = info ? info.days.size : 0;
-    return d <= nDays - 3; // missed 3 or more days
-  }).map(m=>({name:m[0], desig:m[1], submitted: byOfficer[m[0]]?.days.size||0}))
+  const notSubSorted = allNotSubmitted.map(m=>({name:m[0], desig:m[1], submitted: byOfficer[m[0]]?.days.size||0}))
     .sort((a,b)=>a.submitted-b.submitted);
 
-  document.getElementById('wDefCount').textContent = allDefaulters.length+' officers';
-  document.getElementById('wDefaulterTableBody').innerHTML = allDefaulters.length
-    ? allDefaulters.map((d,i)=>{
+  document.getElementById('wDefCount').textContent = notSubSorted.length+' officers';
+  document.getElementById('wDefaulterTableBody').innerHTML = notSubSorted.length
+    ? notSubSorted.map((d,i)=>{
         const missed = nDays - d.submitted;
         const col = d.submitted===0?'#C0392B': missed>=3?'#E67E22':'#888';
         const submittedDays = days.filter(day=>byOfficer[d.name]?.days.has(day))
@@ -1713,12 +1566,11 @@ function buildWeeklyPreview(){
           <td style="font-size:.72rem;color:#555;">${submittedDays}</td>
         </tr>`;
       }).join('')
-    : '<tr><td colspan="5" style="text-align:center;color:var(--success);padding:12px;">✔ No chronic defaulters this week</td></tr>';
+    : '<tr><td colspan="5" style="text-align:center;color:var(--success);padding:12px;">✔ All officers have submitted their reports</td></tr>';
 
   document.getElementById('wGenBar').style.display = 'flex';
 }
 
-// ── Weekly PDF ────────────────────────────────────────
 async function generateWeeklyPDF(){
   if(!weeklyData.length){ alert('No weekly data loaded.'); return; }
   const overlay = document.getElementById('loadingOverlay');
@@ -1738,7 +1590,6 @@ async function generateWeeklyPDF(){
     const corpName  = document.getElementById('corpName').value;
     const prepBy    = document.getElementById('preparedBy').value;
 
-    // Pre-load logo
     const logoImg2 = new Image(); logoImg2.src = LOGO_B64;
     await new Promise(r=>{ logoImg2.onload=r; logoImg2.onerror=r; });
     function makeCircleLogo2(){
@@ -1778,7 +1629,6 @@ async function generateWeeklyPDF(){
       doc.text(title, margin+4, y+5); y+=10;
     }
 
-    // ── Aggregate again for PDF ──
     const days2 = [...new Set(weeklyData.map(r=>r.dateStr).filter(Boolean))].sort();
     const nDays2 = days2.length||1;
     const byOff2 = {};
@@ -1790,9 +1640,12 @@ async function generateWeeklyPDF(){
     const byZone2={};
     weeklyData.forEach(r=>{ const z=r.zone||'UNK'; if(!byZone2[z]) byZone2[z]={count:0,officers:new Set()}; byZone2[z].count++; byZone2[z].officers.add(r.name); });
     const sortedOff2 = Object.entries(byOff2).sort((a,b)=>b[1].count-a[1].count);
-    const allDef2 = masterList.filter(m=>{ const d=(byOff2[m[0]]?.days.size||0); return d<=nDays2-3; }).map(m=>({name:m[0],desig:m[1],submitted:byOff2[m[0]]?.days.size||0})).sort((a,b)=>a.submitted-b.submitted);
 
-    // PAGE 1
+    // Officers not submitted report for weekly PDF
+    const allNotSub2 = masterList.filter(m=>{ const d=(byOff2[m[0]]?.days.size||0); return d<=nDays2-3; })
+      .map(m=>({name:m[0],desig:m[1],submitted:byOff2[m[0]]?.days.size||0}))
+      .sort((a,b)=>a.submitted-b.submitted);
+
     drawWHeader();
 
     // Summary boxes
@@ -1801,7 +1654,7 @@ async function generateWeeklyPDF(){
       ['TOTAL ENTRIES',weeklyData.length,'#1A4A8B'],
       ['WORKING DAYS',nDays2,'#0E6655'],
       ['ACTIVE OFFICERS',Object.keys(byOff2).length,'#1A6B3A'],
-      ['CHRONIC DEFAULTERS',allDef2.length,'#C0392B'],
+      ['NOT SUBMITTED REPORT',allNotSub2.length,'#C0392B'],
     ];
     const sw2=(W-margin*2)/4;
     sItems.forEach((item,i)=>{
@@ -1868,10 +1721,10 @@ async function generateWeeklyPDF(){
     });
     y+=5;
 
-    // Chronic defaulters
-    if(allDef2.length){
+    // Officers Not Submitted Report section in weekly PDF
+    if(allNotSub2.length){
       checkPage(20);
-      drawSecHead('4. CHRONIC DEFAULTERS (MISSED 3+ DAYS)');
+      drawSecHead('4. OFFICERS NOT SUBMITTED REPORT (MISSED 3+ DAYS)');
       const defHdrs=['Name','Designation','Days Submitted','Days Missed'];
       const defHdrX=[2,52,120,155];
       function drawWDefTableHeader(){
@@ -1880,7 +1733,7 @@ async function generateWeeklyPDF(){
         defHdrs.forEach((h,i)=>doc.text(h,margin+defHdrX[i],y+5)); y+=8;
       }
       drawWDefTableHeader();
-      allDef2.forEach((d,i)=>{
+      allNotSub2.forEach((d,i)=>{
         if(y+7>H-16){ doc.addPage(); y=34; drawWHeader(); drawWDefTableHeader(); }
         doc.setFillColor(255,248,248); doc.rect(margin,y,W-margin*2,7,'F');
         doc.setDrawColor(240,210,210); doc.line(margin,y+7,W-margin,y+7);
@@ -1896,7 +1749,6 @@ async function generateWeeklyPDF(){
       });
     }
 
-    // Footer
     const tp=doc.internal.getNumberOfPages();
     for(let p=1;p<=tp;p++){
       doc.setPage(p);
@@ -1915,9 +1767,6 @@ async function generateWeeklyPDF(){
     overlay.classList.remove('show');
   }
 }
-
-// ═══════════════════ INIT DATE ════════════════════
-// week date defaults are set inside window.onload via setMode
 </script>
 </body>
 </html>
