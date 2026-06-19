@@ -303,6 +303,9 @@ tr:hover td{background:#E3F2FD;}
       <button id="modeWeekly"
         style="padding:5px 20px;border:none;border-left:1.5px solid rgba(255,255,255,.3);font-family:var(--font-head);font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.5px;background:transparent;color:rgba(255,255,255,.6);transition:all .2s;"
         onclick="setMode('weekly')">📅 WEEKLY</button>
+      <button id="modeReview"
+        style="padding:5px 20px;border:none;border-left:1.5px solid rgba(255,255,255,.3);font-family:var(--font-head);font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.5px;background:transparent;color:rgba(255,255,255,.6);transition:all .2s;"
+        onclick="setMode('review')">🔎 REVIEW</button>
     </div>
   </div>
   <div class="tabs-bar" style="padding:0 16px;">
@@ -313,6 +316,9 @@ tr:hover td{background:#E3F2FD;}
     </div>
     <div id="weeklyTabs" style="display:none;">
       <button class="tab-btn" id="tbtn-weekly" onclick="switchTab('weekly')">📅 Paste & Analyse</button>
+    </div>
+    <div id="reviewTabs" style="display:none;">
+      <button class="tab-btn" id="tbtn-review" onclick="switchTab('review')">🔎 Review by Department</button>
     </div>
   </div>
 </div>
@@ -409,6 +415,7 @@ tr:hover td{background:#E3F2FD;}
         <div><div class="section-label">Zone</div><input type="number" class="input-sm" id="col_zone" value="3" style="width:60px;"/></div>
         <div><div class="section-label">Ward No</div><input type="number" class="input-sm" id="col_ward" value="4" style="width:60px;"/></div>
         <div><div class="section-label">Inspection</div><input type="number" class="input-sm" id="col_insp" value="5" style="width:60px;"/></div>
+        <div><div class="section-label">Photo/File Upload</div><input type="number" class="input-sm" id="col_photo" value="6" style="width:60px;"/></div>
         <div><div class="section-label">Remarks</div><input type="number" class="input-sm" id="col_rem" value="7" style="width:60px;"/></div>
       </div>
     </div>
@@ -653,6 +660,103 @@ tr:hover td{background:#E3F2FD;}
   </div>
 
 </div><!-- /tab-weekly -->
+
+<!-- TAB: REVIEW -->
+<div class="tab-panel" id="tab-review">
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon"><svg viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" rx="1"/><path d="M5 1v2M11 1v2M1 6h14" stroke="white" stroke-width="1.2" fill="none"/></svg></div>
+      <h2>REVIEW — PASTE INSPECTION DATA</h2>
+    </div>
+    <div class="card-body">
+      <div class="date-row">
+        <label>Review Date:</label>
+        <input type="date" class="date-input" id="reviewDate" onchange="updateReviewDate()"/>
+        <span style="font-size:.75rem;color:#aaa;">← Set the date this review covers</span>
+      </div>
+      <div class="section-label">Paste Google Form response data below (same format — header row included). After pasting, select department(s)/designation(s) below to filter the staff shown.</div>
+      <textarea class="paste-area" id="reviewPasteBox" style="min-height:160px;"
+        placeholder="Paste Google Sheet data here (Ctrl+A → Ctrl+C from Google Sheet)&#10;&#10;Header row is auto-detected."
+        onpaste="setTimeout(parseReviewData,100)" oninput="parseReviewData()"></textarea>
+      <div class="paste-hint">Tip: Select all rows in Google Sheet (Ctrl+A), copy (Ctrl+C), paste here.</div>
+      <div class="parse-status" id="reviewParseStatus"></div>
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary" onclick="parseReviewData()">Parse Data →</button>
+        <button class="btn btn-outline" onclick="document.getElementById('reviewPasteBox').value='';reviewData=[];document.getElementById('reviewParseStatus').className='parse-status';renderReviewDeptFilter();renderReviewTable();">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="reviewDeptCard" style="display:none;">
+    <div class="card-head">
+      <div class="card-icon"><svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5A5.5 5.5 0 118 2.5a5.5 5.5 0 010 11z"/></svg></div>
+      <h2>SELECT DEPARTMENT(S) / DESIGNATION(S)</h2>
+      <span style="margin-left:auto;font-size:.75rem;color:#888;" id="reviewDeptCount">0 selected</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <button class="btn btn-outline" onclick="reviewSelectAllDept(true)" style="font-size:.75rem;padding:5px 12px;">Select All</button>
+        <button class="btn btn-outline" onclick="reviewSelectAllDept(false)" style="font-size:.75rem;padding:5px 12px;">Clear All</button>
+      </div>
+      <div id="reviewDeptGrid" class="master-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));"></div>
+    </div>
+  </div>
+
+  <div class="stats-strip" id="reviewStatsStrip" style="display:none;">
+    <div class="stat-box"><div class="stat-num blue" id="rv_total">0</div><div class="stat-label">Total Entries</div></div>
+    <div class="stat-box"><div class="stat-num green" id="rv_staff">0</div><div class="stat-label">Staff Shown</div></div>
+    <div class="stat-box"><div class="stat-num orange" id="rv_depts">0</div><div class="stat-label">Departments Selected</div></div>
+    <div class="stat-box"><div class="stat-num red" id="rv_notsubmitted">0</div><div class="stat-label">Officers Not Submitted</div></div>
+  </div>
+
+  <div class="card" id="reviewTableCard" style="display:none;">
+    <div class="card-head"><div class="card-icon"><svg viewBox="0 0 16 16"><path d="M8 2a3 3 0 100 6A3 3 0 008 2zM4 12c0-2 1.8-3.5 4-3.5S12 10 12 12v1H4v-1z"/></svg></div>
+      <h2>FILTERED STAFF INSPECTION SUMMARY</h2>
+      <span id="reviewDateLabel" style="margin-left:auto;font-size:.75rem;color:#888;"></span>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div class="tbl-wrap">
+        <table id="reviewTable">
+          <thead><tr>
+            <th style="width:30px;">#</th>
+            <th>Officer Name</th>
+            <th>Designation</th>
+            <th>Zone</th>
+            <th style="text-align:center;">Count</th>
+            <th>Inspections Carried Out</th>
+            <th>Photos</th>
+          </tr></thead>
+          <tbody id="reviewTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Officers Not Submitted Report — Review -->
+  <div class="card" id="reviewDefaulterCard" style="display:none;">
+    <div class="card-head" style="background:linear-gradient(90deg,#FFF0F0,white);">
+      <div class="card-icon" style="background:var(--crimson-mid);"><svg viewBox="0 0 16 16"><path d="M8 1L1 14h14L8 1zm0 3l4.5 8h-9L8 4zm-.5 3v3h1V7h-1zm0 4v1h1v-1h-1z" fill="white"/></svg></div>
+      <h2 style="color:var(--crimson-mid);">OFFICERS NOT SUBMITTED REPORT</h2>
+      <span id="reviewDefCount" style="margin-left:auto;font-size:.75rem;color:var(--crimson);">0 officers</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div class="tbl-wrap">
+        <table id="reviewDefaulterTable">
+          <thead><tr>
+            <th style="width:30px;">#</th>
+            <th>Officer Name</th>
+            <th>Designation</th>
+            <th>Department</th>
+            <th>Status</th>
+          </tr></thead>
+          <tbody id="reviewDefaulterTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /tab-review -->
 </div><!-- /app-body -->
 
 <script>
@@ -666,10 +770,10 @@ const DEFAULT_MASTER = [
   ["AMSAVENI","ASSISTANT COMMISSIONER"],
   ["KUMARESAN","ASSISTANT COMMISSIONER"],
   ["PALANISAMY","EXECUTIVE ENGINEER"],
-  ["THANGAMANI","ASST. EXECUTIVE ENGINEER"],
-  ["OBULI SUNDAR","ASST. EXECUTIVE ENGINEER"],
-  ["SENTHIL KUMAR","ASST. EXECUTIVE ENGINEER"],
-  ["SUMATHI","ASST. EXECUTIVE ENGINEER"],
+  ["THANGAMANI","ASSISTANT EXECUTIVE ENGINEER"],
+  ["OBULI SUNDAR","ASSISTANT EXECUTIVE ENGINEER"],
+  ["SENTHIL KUMAR","ASSISTANT EXECUTIVE ENGINEER"],
+  ["SUMATHI","ASSISTANT EXECUTIVE ENGINEER"],
   ["DIVYA","ASSISTANT ENGINEER"],
   ["SASEDHARAN","ASSISTANT ENGINEER"],
   ["EZHILARASI","ASSISTANT ENGINEER"],
@@ -687,10 +791,9 @@ const DEFAULT_MASTER = [
   ["MALAR","ASSISTANT ENGINEER"],
   ["BALASUBRAMANI","JUNIOR ENGINEER"],
   ["CHANDRASEKARAN","ASSISTANT ENGINEER"],
-  ["PRAKASH","JUNIOR ENGINEER"],
+  ["R.PRAKASH","JUNIOR ENGINEER"],
   ["SENTHAMARAI","ASSISTANT ENGINEER"],
   ["DINESH RAJ","ASSISTANT ENGINEER"],
-  ["A.GOPINATH","SANITARY INSPECTOR"],
   ["SIVANAGNAMOORTHY","SANITARY INSPECTOR"],
   ["UMAMAHESWARI","SANITARY INSPECTOR"],
   ["SARAVANAN","SANITARY INSPECTOR"],
@@ -705,10 +808,61 @@ const DEFAULT_MASTER = [
   ["INIYA","SANITARY INSPECTOR"],
   ["NIRMALKUMAR","SANITARY INSPECTOR"],
   ["VIMALA","SANITARY INSPECTOR"],
-  ["PRAKASH","SANITARY INSPECTOR"],
+  ["K.PRAKASH","SANITARY INSPECTOR"],
 ];
 
 let masterList = JSON.parse(JSON.stringify(DEFAULT_MASTER));
+
+const REVIEW_MASTER = [
+  ["KOTTAI KUMAR","DEPUTY COMMISSIONER","GENERAL"],
+  ["MAHESHWARI","DEPUTY COMMISSIONER","GENERAL"],
+  ["SELVANAYAGAM","SUPERINTENDING ENGINEER","ENGINEERING"],
+  ["RAM KUMAR","CITY HEALTH OFFICER","PUBLIC HEALTH"],
+  ["EGARAJ","ASSISTANT COMMISSIONER","GENERAL"],
+  ["SUBRAMANIYAN","ASSISTANT COMMISSIONER","GENERAL"],
+  ["AMSAVENI","ASSISTANT COMMISSIONER","GENERAL"],
+  ["KUMARESAN","ASSISTANT COMMISSIONER","REVENUE"],
+  ["PALANISAMY","EXECUTIVE ENGINEER","TOWNPLANNING"],
+  ["THANGAMANI","ASSISTANT EXECUTIVE ENGINEER","TOWNPLANNING"],
+  ["OBULI SUNDAR","ASSISTANT EXECUTIVE ENGINEER","ENGINEERING"],
+  ["SENTHIL KUMAR","ASSISTANT EXECUTIVE ENGINEER","ENGINEERING"],
+  ["SUMATHI","ASSISTANT EXECUTIVE ENGINEER","ENGINEERING"],
+  ["DIVYA","ASSISTANT ENGINEER","TOWNPLANNING"],
+  ["SASEDHARAN","ASSISTANT ENGINEER","TOWNPLANNING"],
+  ["EZHILARASI","ASSISTANT ENGINEER","TOWNPLANNING"],
+  ["IMAYAVARAMBAN","ASSISTANT ENGINEER","TOWNPLANNING"],
+  ["KAVIYARAJ","ASSISTANT ENGINEER","ENGINEERING"],
+  ["SIVAKUMAR","ASSISTANT ENGINEER","ENGINEERING"],
+  ["NAVANEDHAN","JUNIOR ENGINEER","ENGINEERING"],
+  ["RISHINADHAN","ASSISTANT ENGINEER","ENGINEERING"],
+  ["MURUGAVEL","ASSISTANT ENGINEER","ENGINEERING"],
+  ["BALASUBRAMANIYAM","ASSISTANT ENGINEER","ENGINEERING"],
+  ["ANBUSELVI","ASSISTANT ENGINEER","ENGINEERING"],
+  ["ELANKAVI","JUNIOR ENGINEER","ENGINEERING"],
+  ["SRINIVASAN","ASSISTANT ENGINEER","ENGINEERING"],
+  ["SUBASH SUNDAR","ASSISTANT ENGINEER","ENGINEERING"],
+  ["MALAR","ASSISTANT ENGINEER","ENGINEERING"],
+  ["BALASUBRAMANI","JUNIOR ENGINEER","ENGINEERING"],
+  ["CHANDRASEKARAN","ASSISTANT ENGINEER","ENGINEERING"],
+  ["R.PRAKASH","JUNIOR ENGINEER","ENGINEERING"],
+  ["SENTHAMARAI","ASSISTANT ENGINEER","ENGINEERING"],
+  ["DINESH RAJ","ASSISTANT ENGINEER","ENGINEERING"],
+  ["SIVANAGNAMOORTHY","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["UMAMAHESWARI","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["SARAVANAN","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["KESAVARAJ","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["PUNITHARASU","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["MANIDURGADEVI","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["SIDDESWARAN","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["S.GOPINATH","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["RITHISHKUMAR","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["ITHIKASAN","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["SATHISHKUMAR","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["INIYA","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["NIRMALKUMAR","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["VIMALA","SANITARY INSPECTOR","PUBLIC HEALTH"],
+  ["K.PRAKASH","SANITARY INSPECTOR","PUBLIC HEALTH"],
+];
 let parsedData = [];
 let chartBar=null, chartPie=null, chartDonut=null;
 let currentMode = 'daily';
@@ -725,6 +879,7 @@ window.onload = function(){
   const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
   const wfEl = document.getElementById('weekFrom'); if(wfEl) wfEl.value = monday.toISOString().split('T')[0];
   const wtEl = document.getElementById('weekTo');   if(wtEl) wtEl.value = sunday.toISOString().split('T')[0];
+  const rvEl = document.getElementById('reviewDate'); if(rvEl){ rvEl.value = todayStr; updateReviewDate(); }
   setMode('daily');
 };
 
@@ -738,20 +893,41 @@ function updateHeaderDate(){
   }
 }
 
+function updateReviewDate(){
+  const d = document.getElementById('reviewDate').value;
+  const lbl = document.getElementById('reviewDateLabel');
+  if(d){
+    const dt = new Date(d+'T00:00:00');
+    const label = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    if(lbl) lbl.textContent = '🗓 '+label;
+    const badge = document.getElementById('modeBadgeVal');
+    if(badge && currentMode==='review') badge.textContent = label;
+  } else if(lbl){
+    lbl.textContent = '';
+  }
+}
+
 function setMode(mode){
   currentMode = mode;
   const isDaily = mode === 'daily';
+  const isWeekly = mode === 'weekly';
+  const isReview = mode === 'review';
   const md = document.getElementById('modeDaily');
   const mw = document.getElementById('modeWeekly');
+  const mr = document.getElementById('modeReview');
   if(md){ md.style.background = isDaily ? 'white' : 'transparent'; md.style.color = isDaily ? '#0D47A1' : 'rgba(255,255,255,.6)'; }
-  if(mw){ mw.style.background = isDaily ? 'transparent' : 'white'; mw.style.color = isDaily ? 'rgba(255,255,255,.6)' : '#0D47A1'; }
+  if(mw){ mw.style.background = isWeekly ? 'white' : 'transparent'; mw.style.color = isWeekly ? '#0D47A1' : 'rgba(255,255,255,.6)'; }
+  if(mr){ mr.style.background = isReview ? 'white' : 'transparent'; mr.style.color = isReview ? '#0D47A1' : 'rgba(255,255,255,.6)'; }
   const badge = document.getElementById('modeBadgeVal');
-  if(badge) badge.textContent = isDaily ? 'Daily' : 'Weekly';
+  if(badge) badge.textContent = isDaily ? 'Daily' : isWeekly ? 'Weekly' : 'Review';
   const dt = document.getElementById('dailyTabs');
   const wt = document.getElementById('weeklyTabs');
+  const rt = document.getElementById('reviewTabs');
   if(dt) dt.style.display = isDaily ? 'flex' : 'none';
-  if(wt) wt.style.display = isDaily ? 'none' : 'flex';
-  switchTab(isDaily ? 'setup' : 'weekly');
+  if(wt) wt.style.display = isWeekly ? 'flex' : 'none';
+  if(rt) rt.style.display = isReview ? 'flex' : 'none';
+  switchTab(isDaily ? 'setup' : isWeekly ? 'weekly' : 'review');
+  if(isReview) updateReviewDate();
 }
 
 function switchTab(name){
@@ -817,6 +993,7 @@ function parseData(){
     zone: getColIdx('col_zone'),
     ward: getColIdx('col_ward'),
     insp: getColIdx('col_insp'),
+    photo:getColIdx('col_photo'),
     rem:  getColIdx('col_rem'),
   };
   const headerRow = lines[0].toLowerCase();
@@ -830,9 +1007,10 @@ function parseData(){
     const zone = (cols[ci.zone]||'').trim().toUpperCase();
     const ward = (cols[ci.ward]||'').trim();
     const insp = (cols[ci.insp]||'').trim();
+    const photo= (cols[ci.photo]||'').trim();
     const rem  = (cols[ci.rem] ||'').trim();
     if(!name||!insp) continue;
-    parsedData.push({name,desig,zone,ward,insp,rem});
+    parsedData.push({name,desig,zone,ward,insp,photo,rem});
   }
   if(parsedData.length===0){showStatus('err','No valid data rows found. Check column mapping.');return;}
   showStatus('ok',`✔ ${parsedData.length} inspection entries parsed from ${new Set(parsedData.map(r=>r.name)).size} officers.`);
@@ -1765,6 +1943,248 @@ async function generateWeeklyPDF(){
     alert('Weekly PDF error: '+e.message); console.error(e);
   } finally {
     overlay.classList.remove('show');
+  }
+}
+/* ===================== REVIEW MODULE ===================== */
+let reviewData = [];
+let reviewSelectedDepts = new Set();
+let reviewPhotoState = {}; // rowId -> { photos:[], idx:0 }
+
+function reviewDeptMap(){
+  const map = {};
+  REVIEW_MASTER.forEach(r=>{ map[r[0]] = r[2] || 'UNSPECIFIED'; });
+  return map;
+}
+
+function toDirectImageUrl(url){
+  if(!url) return url;
+  url = url.trim();
+  let m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if(m) return 'https://drive.google.com/uc?export=view&id='+m[1];
+  m = url.match(/drive\.google\.com\/open\?id=([^&]+)/);
+  if(m) return 'https://drive.google.com/uc?export=view&id='+m[1];
+  m = url.match(/[?&]id=([^&]+)/);
+  if(m && url.indexOf('drive.google.com')!==-1) return 'https://drive.google.com/uc?export=view&id='+m[1];
+  return url;
+}
+
+function parseReviewData(){
+  const raw = document.getElementById('reviewPasteBox').value.trim();
+  const statusEl = document.getElementById('reviewParseStatus');
+  if(!raw){
+    reviewData=[];
+    statusEl.className='parse-status';
+    renderReviewDeptFilter(); renderReviewTable();
+    return;
+  }
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lines.length<2){
+    statusEl.className='parse-status err'; statusEl.textContent='Need at least a header row + 1 data row.';
+    return;
+  }
+  // Reuse the same column mapping configured in the Paste Data (Daily) tab.
+  const ci = {
+    name: getColIdx('col_name'),
+    desig:getColIdx('col_desig'),
+    zone: getColIdx('col_zone'),
+    ward: getColIdx('col_ward'),
+    insp: getColIdx('col_insp'),
+    photo:getColIdx('col_photo'),
+    rem:  getColIdx('col_rem'),
+  };
+  const headerRow = lines[0].toLowerCase();
+  const dataStart = (headerRow.includes('name') || headerRow.includes('officer') || headerRow.includes('timestamp')) ? 1 : 0;
+  const deptMap = reviewDeptMap();
+  reviewData = [];
+  for(let i=dataStart;i<lines.length;i++){
+    const cols = lines[i].split('\t');
+    if(cols.length < 4) continue;
+    const name = (cols[ci.name]||'').trim().toUpperCase();
+    const desig= (cols[ci.desig]||'').trim().toUpperCase();
+    const zone = (cols[ci.zone]||'').trim().toUpperCase();
+    const ward = (cols[ci.ward]||'').trim();
+    const insp = (cols[ci.insp]||'').trim();
+    const photoRaw = (cols[ci.photo]||'').trim();
+    const photos = photoRaw ? photoRaw.split(/[\n,]+/).map(p=>p.trim()).filter(Boolean) : [];
+    const rem  = (cols[ci.rem] ||'').trim();
+    if(!name||!insp) continue;
+    const dept = deptMap[name] || 'UNMAPPED';
+    reviewData.push({name,desig,zone,ward,insp,photos,rem,dept});
+  }
+  if(reviewData.length===0){
+    statusEl.className='parse-status err'; statusEl.textContent='No valid data rows found. Check column mapping in the Setup → Paste Data column mapping panel.';
+    renderReviewDeptFilter(); renderReviewTable();
+    return;
+  }
+  statusEl.className='parse-status ok';
+  statusEl.textContent = `✔ ${reviewData.length} inspection entries parsed from ${new Set(reviewData.map(r=>r.name)).size} staff. Select department(s) below.`;
+  reviewSelectedDepts = new Set(REVIEW_MASTER.map(r=>r[2]));
+  renderReviewDeptFilter();
+  renderReviewTable();
+}
+
+function renderReviewDeptFilter(){
+  const card = document.getElementById('reviewDeptCard');
+  if(!reviewData.length){ card.style.display='none'; return; }
+  card.style.display='';
+  const allDepts = [...new Set(REVIEW_MASTER.map(r=>r[2]))].sort();
+  const grid = document.getElementById('reviewDeptGrid');
+  grid.innerHTML = allDepts.map(d=>{
+    const id = 'rvdept_'+d.replace(/[^A-Z0-9]/g,'_');
+    const checked = reviewSelectedDepts.has(d) ? 'checked' : '';
+    const staffCount = REVIEW_MASTER.filter(r=>r[2]===d).length;
+    const entryCount = reviewData.filter(r=>r.dept===d).length;
+    return `<label class="master-row" style="cursor:pointer;">
+      <input type="checkbox" id="${id}" data-dept="${d}" ${checked} onchange="reviewToggleDept('${d.replace(/'/g,"\\'")}')" style="margin-right:8px;width:16px;height:16px;"/>
+      <span class="master-name" style="flex:1;">${d}</span>
+      <span class="master-desig" style="margin-left:auto;">${staffCount} staff · ${entryCount} entr${entryCount===1?'y':'ies'}</span>
+    </label>`;
+  }).join('');
+  document.getElementById('reviewDeptCount').textContent = reviewSelectedDepts.size+' selected';
+}
+
+function reviewToggleDept(d){
+  if(reviewSelectedDepts.has(d)) reviewSelectedDepts.delete(d);
+  else reviewSelectedDepts.add(d);
+  document.getElementById('reviewDeptCount').textContent = reviewSelectedDepts.size+' selected';
+  renderReviewTable();
+}
+
+function reviewSelectAllDept(selectAll){
+  const allDepts = [...new Set(REVIEW_MASTER.map(r=>r[2]))];
+  reviewSelectedDepts = selectAll ? new Set(allDepts) : new Set();
+  renderReviewDeptFilter();
+  renderReviewTable();
+}
+
+function toDrivePreviewUrl(url){
+  if(!url) return null;
+  let m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if(m) return 'https://drive.google.com/file/d/'+m[1]+'/preview';
+  m = url.match(/drive\.google\.com\/open\?id=([^&]+)/);
+  if(m) return 'https://drive.google.com/file/d/'+m[1]+'/preview';
+  m = url.match(/[?&]id=([^&]+)/);
+  if(m && url.indexOf('drive.google.com')!==-1) return 'https://drive.google.com/file/d/'+m[1]+'/preview';
+  return null;
+}
+
+function reviewPhotoCell(rowId, photos){
+  reviewPhotoState[rowId] = { photos, idx:0 };
+  if(!photos.length){
+    return '<span style="color:#bbb;font-size:.72rem;">— No photo —</span>';
+  }
+  const previewUrl = toDrivePreviewUrl(photos[0]);
+  return `<div class="rv-photo-slider" style="width:340px;">
+    <div style="position:relative;width:340px;height:260px;background:#f0f4f8;border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+      <img id="rvimg_${rowId}" src="${toDirectImageUrl(photos[0])}" style="max-width:100%;max-height:100%;object-fit:cover;display:block;" onerror="reviewPhotoImgFail('${rowId}')"/>
+      <iframe id="rvframe_${rowId}" src="${previewUrl||''}" style="display:none;width:100%;height:100%;border:none;" allow="autoplay"></iframe>
+      <a id="rvfallback_${rowId}" href="${photos[0]}" target="_blank" rel="noopener" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:4px;text-decoration:none;color:#1565C0;font-size:.7rem;background:#E3F2FD;">📷<span>Open Photo</span></a>
+      ${photos.length>1?`
+      <button onclick="reviewSlidePhoto('${rowId}',-1)" style="position:absolute;left:4px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:white;cursor:pointer;font-size:17px;line-height:1;">‹</button>
+      <button onclick="reviewSlidePhoto('${rowId}',1)" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:white;cursor:pointer;font-size:17px;line-height:1;">›</button>
+      `:''}
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px;">
+      <span id="rvcount_${rowId}" style="font-size:.72rem;color:#888;font-family:var(--font-mono);">1 / ${photos.length}</span>
+      <a id="rvopen_${rowId}" href="${photos[0]}" target="_blank" rel="noopener" style="font-size:.72rem;color:#1565C0;text-decoration:none;">Open ↗</a>
+    </div>
+  </div>`;
+}
+
+function reviewPhotoImgFail(rowId){
+  const img = document.getElementById('rvimg_'+rowId);
+  const frame = document.getElementById('rvframe_'+rowId);
+  const fb = document.getElementById('rvfallback_'+rowId);
+  if(img) img.style.display='none';
+  if(frame && frame.getAttribute('src')){
+    frame.style.display='block';
+  } else if(fb){
+    fb.style.display='flex';
+  }
+}
+
+function reviewSlidePhoto(rowId, dir){
+  const st = reviewPhotoState[rowId];
+  if(!st || !st.photos.length) return;
+  st.idx = (st.idx + dir + st.photos.length) % st.photos.length;
+  const img = document.getElementById('rvimg_'+rowId);
+  const frame = document.getElementById('rvframe_'+rowId);
+  const fb = document.getElementById('rvfallback_'+rowId);
+  const cnt = document.getElementById('rvcount_'+rowId);
+  const open = document.getElementById('rvopen_'+rowId);
+  const url = st.photos[st.idx];
+  const previewUrl = toDrivePreviewUrl(url);
+  if(img){ img.style.display='block'; img.src = toDirectImageUrl(url); }
+  if(frame){ frame.style.display='none'; frame.src = previewUrl||''; }
+  if(fb){ fb.style.display='none'; fb.href = url; }
+  if(cnt) cnt.textContent = (st.idx+1)+' / '+st.photos.length;
+  if(open) open.href = url;
+}
+
+function renderReviewTable(){
+  const statsEl = document.getElementById('reviewStatsStrip');
+  const tableCard = document.getElementById('reviewTableCard');
+  const defCard = document.getElementById('reviewDefaulterCard');
+  if(!reviewData.length){
+    statsEl.style.display='none';
+    tableCard.style.display='none';
+    if(defCard) defCard.style.display='none';
+    return;
+  }
+  const filtered = reviewData.filter(r=>reviewSelectedDepts.has(r.dept));
+  statsEl.style.display='';
+  tableCard.style.display='';
+  if(defCard) defCard.style.display='';
+
+  const byOfficer={};
+  filtered.forEach(r=>{
+    if(!byOfficer[r.name]) byOfficer[r.name]={desig:r.desig,zone:r.zone,dept:r.dept,inspections:[],photos:[]};
+    byOfficer[r.name].inspections.push(r.insp);
+    if(r.photos && r.photos.length) byOfficer[r.name].photos.push(...r.photos);
+  });
+
+  const submittedNames = new Set(Object.keys(byOfficer));
+  const masterInSelected = REVIEW_MASTER.filter(m=>reviewSelectedDepts.has(m[2]));
+  const notSubmitted = masterInSelected.filter(m=>!submittedNames.has(m[0]));
+  const photoTotal = filtered.reduce((acc,r)=>acc+(r.photos?r.photos.length:0),0);
+
+  document.getElementById('rv_total').textContent = filtered.length;
+  document.getElementById('rv_staff').textContent = Object.keys(byOfficer).length;
+  document.getElementById('rv_depts').textContent = reviewSelectedDepts.size;
+  document.getElementById('rv_notsubmitted').textContent = notSubmitted.length;
+
+  reviewPhotoState = {};
+  const sorted = Object.entries(byOfficer).sort((a,b)=>b[1].inspections.length-a[1].inspections.length);
+  const tb = document.getElementById('reviewTableBody');
+  tb.innerHTML = sorted.map(([name,info],i)=>{
+    const zbadge = zBadge(info.zone);
+    const unique = [...new Set(info.inspections)];
+    const inspHtml = unique.map(x=>`<span style="display:inline-block;background:#f5f5f5;border-radius:3px;padding:1px 6px;margin:1px;font-size:.72rem;">${x}</span>`).join(' ');
+    const uniquePhotos = [...new Set(info.photos)];
+    const rowId = 'rv'+i;
+    const photoHtml = reviewPhotoCell(rowId, uniquePhotos);
+    return `<tr>
+      <td style="font-family:var(--font-mono);font-size:.72rem;color:#aaa;">${i+1}</td>
+      <td style="font-weight:600;">${name}</td>
+      <td style="font-size:.77rem;color:#666;">${info.desig}<br/><span style="font-size:.66rem;color:#1565C0;">${info.dept}</span></td>
+      <td>${zbadge}</td>
+      <td style="text-align:center;"><span class="count-pill">${info.inspections.length}</span></td>
+      <td>${inspHtml}</td>
+      <td>${photoHtml}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">No staff found for the selected department(s).</td></tr>';
+
+  const dtb = document.getElementById('reviewDefaulterTableBody');
+  if(dtb){
+    document.getElementById('reviewDefCount').textContent = notSubmitted.length+' officers';
+    dtb.innerHTML = notSubmitted.map((d,i)=>`
+      <tr class="def-row">
+        <td style="font-family:var(--font-mono);font-size:.72rem;color:#aaa;">${i+1}</td>
+        <td style="font-weight:600;color:var(--crimson);">${d[0]}</td>
+        <td style="font-size:.77rem;color:#666;">${d[1]}</td>
+        <td style="font-size:.77rem;color:#1565C0;">${d[2]}</td>
+        <td><span class="def-badge">⚠ Report Not Submitted</span></td>
+      </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--success);padding:12px;">✔ All officers in the selected department(s) have submitted their reports</td></tr>';
   }
 }
 </script>
