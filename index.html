@@ -843,66 +843,26 @@ tr:hover td{background:#E3F2FD;}
   <div class="stats-strip" id="rangeStatsStrip" style="display:none;">
     <div class="stat-box"><div class="stat-num blue" id="rng_workdays">0</div><div class="stat-label">Working Days</div></div>
     <div class="stat-box"><div class="stat-num blue" id="rng_total">0</div><div class="stat-label">Total Entries</div></div>
-    <div class="stat-box"><div class="stat-num green" id="rng_submitted">0</div><div class="stat-label">Officers Submitted</div></div>
-    <div class="stat-box"><div class="stat-num red" id="rng_notsubmitted">0</div><div class="stat-label">Never Submitted</div></div>
+    <div class="stat-box"><div class="stat-num green" id="rng_full">0</div><div class="stat-label">Fully Compliant</div></div>
+    <div class="stat-box"><div class="stat-num orange" id="rng_partial">0</div><div class="stat-label">Partial Submission</div></div>
+    <div class="stat-box"><div class="stat-num red" id="rng_notsubmitted">0</div><div class="stat-label">Zero Submission</div></div>
+    <div class="stat-box"><div class="stat-num blue" id="rng_rate" style="font-size:1.4rem;">0%</div><div class="stat-label">Overall Compliance</div></div>
   </div>
 
-  <!-- Summary Table -->
-  <div class="card" id="rangeTableCard" style="display:none;">
-    <div class="card-head">
-      <div class="card-icon"><svg viewBox="0 0 16 16"><path d="M8 2a3 3 0 100 6A3 3 0 008 2zM4 12c0-2 1.8-3.5 4-3.5S12 10 12 12v1H4v-1z" fill="white"/></svg></div>
-      <h2>OFFICER SUBMISSION SUMMARY</h2>
-      <span id="rangeDateRangeLabel" style="margin-left:auto;font-size:.74rem;color:#888;"></span>
-    </div>
-    <div class="card-body" style="padding:0;">
-      <div class="tbl-wrap">
-        <table id="rangeTable">
-          <thead><tr>
-            <th style="width:30px;">#</th>
-            <th>Officer Name</th>
-            <th>Designation</th>
-            <th>Department</th>
-            <th style="text-align:center;">Days Submitted</th>
-            <th style="text-align:center;">Days Absent</th>
-            <th>Days Submitted On</th>
-            <th>Days Not Submitted</th>
-            <th>Photos</th>
-          </tr></thead>
-          <tbody id="rangeTableBody"></tbody>
-        </table>
-      </div>
-    </div>
+  <!-- Export button -->
+  <div id="rangeExportBar" style="display:none;padding:0 0 12px 0;display:none;gap:10px;flex-wrap:wrap;">
+    <button class="btn btn-primary" onclick="generateRangePDF()">⬇ Export PDF Report</button>
+    <button class="btn btn-outline" onclick="window.print()">🖨 Print</button>
   </div>
 
-  <!-- Not Submitted at All -->
-  <div class="card" id="rangeDefaulterCard" style="display:none;">
-    <div class="card-head" style="background:linear-gradient(90deg,#FFF0F0,white);">
-      <div class="card-icon" style="background:var(--crimson-mid);"><svg viewBox="0 0 16 16"><path d="M8 1L1 14h14L8 1zm0 3l4.5 8h-9L8 4zm-.5 3v3h1V7h-1zm0 4v1h1v-1h-1z" fill="white"/></svg></div>
-      <h2 style="color:var(--crimson-mid);">OFFICERS — ZERO SUBMISSION IN DATE RANGE</h2>
-      <span id="rangeDefCount" style="margin-left:auto;font-size:.75rem;color:var(--crimson);">0 officers</span>
-    </div>
-    <div class="card-body" style="padding:0;">
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th style="width:30px;">#</th>
-            <th>Officer Name</th>
-            <th>Designation</th>
-            <th>Department</th>
-            <th>Status</th>
-          </tr></thead>
-          <tbody id="rangeDefaulterTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  <!-- Report output rendered here -->
+  <div id="rangeReportOutput"></div>
 
 </div><!-- /tab-range -->
 </div><!-- /app-body -->
 
 <script>
 const DEFAULT_MASTER = [
-  ["KOTTAI KUMAR","DEPUTY COMMISSIONER"],
   ["MAHESHWARI","DEPUTY COMMISSIONER"],
   ["SELVANAYAGAM","SUPERINTENDING ENGINEER"],
   ["RAM KUMAR","CITY HEALTH OFFICER"],
@@ -955,7 +915,6 @@ const DEFAULT_MASTER = [
 let masterList = JSON.parse(JSON.stringify(DEFAULT_MASTER));
 
 const REVIEW_MASTER = [
-  ["KOTTAI KUMAR","DEPUTY COMMISSIONER","GENERAL"],
   ["MAHESHWARI","DEPUTY COMMISSIONER","GENERAL"],
   ["SELVANAYAGAM","SUPERINTENDING ENGINEER","ENGINEERING"],
   ["RAM KUMAR","CITY HEALTH OFFICER","PUBLIC HEALTH"],
@@ -2332,168 +2291,124 @@ function renderReviewTable(){
       </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--success);padding:12px;">✔ All officers in the selected department(s) have submitted their reports</td></tr>';
   }
 }
+
 /* ===================== DATE RANGE MODULE ===================== */
 let rangeData = [];
-let rangeHolidays = {}; // 'YYYY-MM-DD' -> label
+let rangeHolidays = {};
 let rangePhotoState = {};
 
 function rangeToYMD(d){ return d.toISOString().split('T')[0]; }
-function rangeFmt(ymd){
-  const d = new Date(ymd+'T00:00:00');
-  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-}
-function rangeFmtShort(ymd){
-  const d = new Date(ymd+'T00:00:00');
-  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
-}
-function rangeDayName(ymd){
-  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(ymd+'T00:00:00').getDay()];
-}
+function rangeFmt(ymd){ const d=new Date(ymd+'T00:00:00'); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
+function rangeFmtShort(ymd){ const d=new Date(ymd+'T00:00:00'); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}); }
+function rangeDayName(ymd){ return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(ymd+'T00:00:00').getDay()]; }
 
 function rangeSetThisWeek(){
-  const today = new Date();
-  const day = today.getDay();
-  const mon = new Date(today); mon.setDate(today.getDate()-((day+6)%7));
-  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
-  document.getElementById('rangeFrom').value = rangeToYMD(mon);
-  document.getElementById('rangeTo').value   = rangeToYMD(sun);
+  const today=new Date(), day=today.getDay();
+  const mon=new Date(today); mon.setDate(today.getDate()-((day+6)%7));
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  document.getElementById('rangeFrom').value=rangeToYMD(mon);
+  document.getElementById('rangeTo').value=rangeToYMD(sun);
   buildRangeCalendar();
 }
-
 function rangeSetThisMonth(){
-  const today = new Date();
-  const first = new Date(today.getFullYear(), today.getMonth(), 1);
-  const last  = new Date(today.getFullYear(), today.getMonth()+1, 0);
-  document.getElementById('rangeFrom').value = rangeToYMD(first);
-  document.getElementById('rangeTo').value   = rangeToYMD(last);
+  const today=new Date();
+  const first=new Date(today.getFullYear(),today.getMonth(),1);
+  const last=new Date(today.getFullYear(),today.getMonth()+1,0);
+  document.getElementById('rangeFrom').value=rangeToYMD(first);
+  document.getElementById('rangeTo').value=rangeToYMD(last);
   buildRangeCalendar();
 }
-
 function rangeAddHoliday(){
-  const dp = document.getElementById('rangeHolidayPick');
-  const lp = document.getElementById('rangeHolidayLabel');
+  const dp=document.getElementById('rangeHolidayPick');
+  const lp=document.getElementById('rangeHolidayLabel');
   if(!dp.value) return;
-  rangeHolidays[dp.value] = lp.value.trim() || 'Holiday';
+  rangeHolidays[dp.value]=lp.value.trim()||'Holiday';
   dp.value=''; lp.value='';
   buildRangeCalendar();
 }
-
-function rangeRemoveHoliday(ymd){
-  delete rangeHolidays[ymd];
-  buildRangeCalendar();
-}
+function rangeRemoveHoliday(ymd){ delete rangeHolidays[ymd]; buildRangeCalendar(); }
 
 function rangeGetWorkingDays(){
-  const from = document.getElementById('rangeFrom').value;
-  const to   = document.getElementById('rangeTo').value;
+  const from=document.getElementById('rangeFrom').value;
+  const to=document.getElementById('rangeTo').value;
   if(!from||!to||from>to) return [];
-  const exSun = document.getElementById('excludeSunday').checked;
-  const exSat = document.getElementById('excludeSaturday').checked;
-  const days = [];
-  let cur = new Date(from+'T00:00:00');
-  const end = new Date(to+'T00:00:00');
+  const exSun=document.getElementById('excludeSunday').checked;
+  const exSat=document.getElementById('excludeSaturday').checked;
+  const days=[];
+  let cur=new Date(from+'T00:00:00');
+  const end=new Date(to+'T00:00:00');
   while(cur<=end){
-    const ymd = rangeToYMD(cur);
-    const dow = cur.getDay();
-    if(!rangeHolidays[ymd] && !(exSun&&dow===0) && !(exSat&&dow===6)){
-      days.push(ymd);
-    }
+    const ymd=rangeToYMD(cur);
+    const dow=cur.getDay();
+    if(!rangeHolidays[ymd]&&!(exSun&&dow===0)&&!(exSat&&dow===6)) days.push(ymd);
     cur.setDate(cur.getDate()+1);
   }
   return days;
 }
 
 function buildRangeCalendar(){
-  const from = document.getElementById('rangeFrom').value;
-  const to   = document.getElementById('rangeTo').value;
-  const wrap = document.getElementById('rangeCalendarWrap');
-  // holiday pills
-  const hl = document.getElementById('rangeHolidayList');
-  hl.innerHTML = Object.entries(rangeHolidays).sort().map(([ymd,label])=>
+  const from=document.getElementById('rangeFrom').value;
+  const to=document.getElementById('rangeTo').value;
+  const wrap=document.getElementById('rangeCalendarWrap');
+  const hl=document.getElementById('rangeHolidayList');
+  hl.innerHTML=Object.entries(rangeHolidays).sort().map(([ymd,label])=>
     `<span style="display:inline-flex;align-items:center;gap:5px;background:#FFF3E0;border:1px solid #FFB74D;border-radius:14px;padding:2px 10px;font-size:.72rem;">
       🎌 ${rangeFmtShort(ymd)} — ${label}
       <button onclick="rangeRemoveHoliday('${ymd}')" style="border:none;background:none;cursor:pointer;color:#E65100;font-size:11px;padding:0;line-height:1;">✕</button>
     </span>`).join('');
-
   if(!from||!to||from>to){ wrap.innerHTML=''; return; }
-  const exSun = document.getElementById('excludeSunday').checked;
-  const exSat = document.getElementById('excludeSaturday').checked;
-  // build all dates in range
-  let cur = new Date(from+'T00:00:00');
-  const end = new Date(to+'T00:00:00');
-  const allDays=[];
+  const exSun=document.getElementById('excludeSunday').checked;
+  const exSat=document.getElementById('excludeSaturday').checked;
+  let cur=new Date(from+'T00:00:00'); const end=new Date(to+'T00:00:00'); const allDays=[];
   while(cur<=end){ allDays.push(rangeToYMD(cur)); cur.setDate(cur.getDate()+1); }
-  const workingSet = new Set(rangeGetWorkingDays());
-  const totalDays = allDays.length;
-  const workingCount = workingSet.size;
-  const excluded = totalDays - workingCount;
-
-  let html = `<div style="margin-bottom:8px;font-size:.78rem;color:#555;">
-    <b>${workingCount} working day${workingCount!==1?'s':''}</b> selected across ${totalDays} calendar days
-    &nbsp;·&nbsp; <span style="color:var(--crimson);">${excluded} excluded</span>
-    (${exSun?'Sundays':''}${exSun&&exSat?', ':''}${exSat?'Saturdays':''}${(exSun||exSat)&&Object.keys(rangeHolidays).length?', ':''}${Object.keys(rangeHolidays).length?Object.keys(rangeHolidays).length+' holiday'+(Object.keys(rangeHolidays).length!==1?'s':''):''}${(!exSun&&!exSat&&!Object.keys(rangeHolidays).length)?'none':''})
-  </div>
-  <div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+  const workingSet=new Set(rangeGetWorkingDays());
+  const excCount=allDays.length-workingSet.size;
+  const exLabels=[];
+  if(exSun) exLabels.push('Sundays');
+  if(exSat) exLabels.push('Saturdays');
+  if(Object.keys(rangeHolidays).length) exLabels.push(Object.keys(rangeHolidays).length+' holiday'+(Object.keys(rangeHolidays).length!==1?'s':''));
+  let html=`<div style="margin-bottom:8px;font-size:.78rem;color:#555;">
+    <b>${workingSet.size} working day${workingSet.size!==1?'s':''}</b> in ${allDays.length} calendar days
+    &nbsp;·&nbsp; <span style="color:var(--crimson);">${excCount} excluded</span>${exLabels.length?' ('+exLabels.join(', ')+')':''}
+  </div><div style="display:flex;flex-wrap:wrap;gap:4px;">`;
   allDays.forEach(ymd=>{
-    const day = rangeDayName(ymd);
-    const isSun = new Date(ymd+'T00:00:00').getDay()===0;
-    const isSat = new Date(ymd+'T00:00:00').getDay()===6;
-    const isHol = !!rangeHolidays[ymd];
-    const excluded = !workingSet.has(ymd);
-    const bg = excluded ? '#f5f5f5' : '#E8F5E9';
-    const color = excluded ? '#bbb' : '#2E7D32';
-    const strike = excluded ? 'text-decoration:line-through;' : '';
-    const title = isHol ? rangeHolidays[ymd] : (isSun?'Sunday':(isSat?'Saturday':'Working Day'));
-    html+=`<div title="${title}" style="display:inline-flex;flex-direction:column;align-items:center;background:${bg};border-radius:6px;padding:4px 7px;min-width:38px;cursor:default;">
-      <span style="font-size:.58rem;color:#aaa;font-family:var(--font-mono);">${day}</span>
-      <span style="font-size:.72rem;font-weight:700;${strike}color:${color};">${ymd.slice(8)}</span>
+    const excluded=!workingSet.has(ymd);
+    const isSun=new Date(ymd+'T00:00:00').getDay()===0;
+    const isSat=new Date(ymd+'T00:00:00').getDay()===6;
+    const isHol=!!rangeHolidays[ymd];
+    const title=isHol?rangeHolidays[ymd]:(isSun?'Sunday':(isSat?'Saturday':'Working Day'));
+    html+=`<div title="${title}" style="display:inline-flex;flex-direction:column;align-items:center;background:${excluded?'#f5f5f5':'#E8F5E9'};border-radius:6px;padding:4px 7px;min-width:38px;">
+      <span style="font-size:.58rem;color:#aaa;font-family:var(--font-mono);">${rangeDayName(ymd)}</span>
+      <span style="font-size:.72rem;font-weight:700;${excluded?'text-decoration:line-through;color:#bbb':'color:#2E7D32'}">${ymd.slice(8)}</span>
     </div>`;
   });
-  html+='</div>';
-  wrap.innerHTML=html;
-  // also re-run parse if data exists
+  wrap.innerHTML=html+'</div>';
   if(rangeData.length) renderRangeReport();
-  // update label
-  const lbl=document.getElementById('rangeDateRangeLabel');
-  if(lbl) lbl.textContent=from&&to?`🗓 ${rangeFmt(from)} → ${rangeFmt(to)}`:'';
 }
 
 function rangeParseTimestamp(ts){
   if(!ts) return null;
-  // Try native parse first
-  const d = new Date(ts);
-  if(!isNaN(d)) return rangeToYMD(d);
-  // DD/MM/YYYY or DD-MM-YYYY
-  let m = ts.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  const d=new Date(ts); if(!isNaN(d)) return rangeToYMD(d);
+  const m=ts.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
   if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
   return null;
 }
 
 function parseRangeData(){
-  const raw = document.getElementById('rangePasteBox').value.trim();
-  const statusEl = document.getElementById('rangeParseStatus');
+  const raw=document.getElementById('rangePasteBox').value.trim();
+  const statusEl=document.getElementById('rangeParseStatus');
   if(!raw){ rangeData=[]; renderRangeReport(); statusEl.className='parse-status'; return; }
-  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
   if(lines.length<2){ statusEl.className='parse-status err'; statusEl.textContent='Need at least header + 1 data row.'; return; }
-  const ci = {
-    ts:   0,
-    name: getColIdx('col_name'),
-    desig:getColIdx('col_desig'),
-    zone: getColIdx('col_zone'),
-    ward: getColIdx('col_ward'),
-    insp: getColIdx('col_insp'),
-    photo:getColIdx('col_photo'),
-    rem:  getColIdx('col_rem'),
-  };
-  const headerRow = lines[0].toLowerCase();
-  const dataStart = (headerRow.includes('timestamp')||headerRow.includes('name')||headerRow.includes('officer')) ? 1 : 0;
-  const deptMap={};
-  REVIEW_MASTER.forEach(r=>{ deptMap[r[0]]=r[2]||'UNSPECIFIED'; });
+  const ci={ ts:0, name:getColIdx('col_name'), desig:getColIdx('col_desig'), zone:getColIdx('col_zone'), ward:getColIdx('col_ward'), insp:getColIdx('col_insp'), photo:getColIdx('col_photo'), rem:getColIdx('col_rem') };
+  const headerRow=lines[0].toLowerCase();
+  const dataStart=(headerRow.includes('timestamp')||headerRow.includes('name')||headerRow.includes('officer'))?1:0;
+  const deptMap={}; REVIEW_MASTER.forEach(r=>{ deptMap[r[0]]=r[2]||'UNSPECIFIED'; });
   rangeData=[];
   for(let i=dataStart;i<lines.length;i++){
     const cols=lines[i].split('\t');
     if(cols.length<4) continue;
-    const ymd = rangeParseTimestamp((cols[ci.ts]||'').trim());
+    const ymd=rangeParseTimestamp((cols[ci.ts]||'').trim());
     const name=(cols[ci.name]||'').trim().toUpperCase();
     const desig=(cols[ci.desig]||'').trim().toUpperCase();
     const zone=(cols[ci.zone]||'').trim().toUpperCase();
@@ -2508,79 +2423,202 @@ function parseRangeData(){
   if(!rangeData.length){ statusEl.className='parse-status err'; statusEl.textContent='No valid rows found.'; return; }
   const noDate=rangeData.filter(r=>!r.ymd).length;
   statusEl.className='parse-status ok';
-  statusEl.textContent=`✔ ${rangeData.length} entries parsed${noDate?` (⚠ ${noDate} rows had unreadable timestamps — check Col 1)`:''}.`;
+  statusEl.textContent=`✔ ${rangeData.length} entries parsed${noDate?` (⚠ ${noDate} rows had unreadable timestamps)`:''}.`;
   renderRangeReport();
+}
+
+function complianceBadge(pct){
+  const bg=pct>=80?'#E8F5E9':pct>=50?'#FFF8E1':'#FFF0F0';
+  const col=pct>=80?'#2E7D32':pct>=50?'#B7410E':'#C62828';
+  const label=pct>=80?'✔ Good':pct>=50?'⚠ Partial':'✗ Poor';
+  return `<span style="background:${bg};color:${col};border-radius:10px;padding:2px 9px;font-size:.68rem;font-weight:700;">${label} ${pct}%</span>`;
+}
+
+function dayChip(ymd, submitted){
+  const bg=submitted?'#E8F5E9':'#FFF0F0';
+  const col=submitted?'#2E7D32':'#C62828';
+  const icon=submitted?'✔':'✗';
+  return `<span title="${submitted?'Submitted':'Not Submitted'} — ${rangeFmt(ymd)}" style="display:inline-flex;flex-direction:column;align-items:center;background:${bg};color:${col};border-radius:5px;padding:2px 6px;margin:2px;min-width:42px;font-size:.66rem;">
+    <span style="font-weight:700;">${rangeFmtShort(ymd)}</span>
+    <span>${icon}</span>
+  </span>`;
 }
 
 function renderRangeReport(){
   const statsEl=document.getElementById('rangeStatsStrip');
-  const tcard=document.getElementById('rangeTableCard');
-  const dcard=document.getElementById('rangeDefaulterCard');
+  const exportBar=document.getElementById('rangeExportBar');
+  const output=document.getElementById('rangeReportOutput');
   if(!rangeData.length){
-    [statsEl,tcard,dcard].forEach(e=>{ if(e) e.style.display='none'; });
+    statsEl.style.display='none';
+    if(exportBar) exportBar.style.display='none';
+    output.innerHTML='';
     return;
   }
-  const workingSet=new Set(rangeGetWorkingDays());
+  const workingDays=rangeGetWorkingDays();
+  const workingSet=new Set(workingDays);
   const filtered=rangeData.filter(r=>r.ymd&&workingSet.has(r.ymd));
-  // per officer
-  const byOfficer={};
-  filtered.forEach(r=>{
-    if(!byOfficer[r.name]) byOfficer[r.name]={desig:r.desig,zone:r.zone,dept:r.dept,days:new Set(),photos:[]};
-    if(r.ymd) byOfficer[r.name].days.add(r.ymd);
-    if(r.photos.length) byOfficer[r.name].photos.push(...r.photos);
-  });
-  const workDays=[...workingSet].sort();
-  const submittedNames=new Set(Object.keys(byOfficer));
-  const neverSubmitted=REVIEW_MASTER.filter(m=>!submittedNames.has(m[0]));
-
-  statsEl.style.display=''; tcard.style.display=''; dcard.style.display='';
-  document.getElementById('rng_workdays').textContent=workDays.length;
-  document.getElementById('rng_total').textContent=filtered.length;
-  document.getElementById('rng_submitted').textContent=submittedNames.size;
-  document.getElementById('rng_notsubmitted').textContent=neverSubmitted.length;
-
-  const lbl=document.getElementById('rangeDateRangeLabel');
   const from=document.getElementById('rangeFrom').value;
   const to=document.getElementById('rangeTo').value;
-  if(lbl&&from&&to) lbl.textContent=`🗓 ${rangeFmt(from)} → ${rangeFmt(to)}`;
+  const rangeLabel=from&&to?`${rangeFmt(from)} → ${rangeFmt(to)}`:'';
+
+  // Build per-officer data
+  const byOfficer={};
+  filtered.forEach(r=>{
+    if(!byOfficer[r.name]) byOfficer[r.name]={desig:r.desig,zone:r.zone,dept:r.dept,days:new Set(),inspections:[],photos:[]};
+    if(r.ymd) byOfficer[r.name].days.add(r.ymd);
+    byOfficer[r.name].inspections.push(r.insp);
+    if(r.photos.length) byOfficer[r.name].photos.push(...r.photos);
+  });
+
+  const submittedNames=new Set(Object.keys(byOfficer));
+  const totalWorkDays=workingDays.length;
+  const fullCompliant=Object.values(byOfficer).filter(o=>o.days.size===totalWorkDays).length;
+  const partial=Object.values(byOfficer).filter(o=>o.days.size>0&&o.days.size<totalWorkDays).length;
+  const neverSubmitted=REVIEW_MASTER.filter(m=>!submittedNames.has(m[0]));
+  const overallRate=REVIEW_MASTER.length?Math.round(submittedNames.size/REVIEW_MASTER.length*100):0;
+
+  // Stats
+  statsEl.style.display='';
+  if(exportBar){ exportBar.style.display='flex'; }
+  document.getElementById('rng_workdays').textContent=totalWorkDays;
+  document.getElementById('rng_total').textContent=filtered.length;
+  document.getElementById('rng_full').textContent=fullCompliant;
+  document.getElementById('rng_partial').textContent=partial;
+  document.getElementById('rng_notsubmitted').textContent=neverSubmitted.length;
+  document.getElementById('rng_rate').textContent=overallRate+'%';
+
+  // Build dept map
+  const deptGroups={};
+  REVIEW_MASTER.forEach(m=>{
+    if(!deptGroups[m[2]]) deptGroups[m[2]]={officers:[]};
+    deptGroups[m[2]].officers.push(m);
+  });
 
   rangePhotoState={};
-  const sorted=Object.entries(byOfficer).sort((a,b)=>b[1].days.size-a[1].days.size);
-  const tb=document.getElementById('rangeTableBody');
-  tb.innerHTML=sorted.map(([name,info],i)=>{
-    const submDays=[...info.days].sort();
-    const missingDays=workDays.filter(d=>!info.days.has(d));
-    const submHtml=submDays.map(d=>`<span style="display:inline-block;background:#E8F5E9;color:#2E7D32;border-radius:3px;padding:1px 6px;margin:1px;font-size:.68rem;">${rangeFmtShort(d)}</span>`).join('');
-    const missHtml=missingDays.map(d=>`<span style="display:inline-block;background:#FFF0F0;color:var(--crimson);border-radius:3px;padding:1px 6px;margin:1px;font-size:.68rem;">${rangeFmtShort(d)}</span>`).join('') || '<span style="color:#bbb;font-size:.68rem;">— All days covered</span>';
+  let html='';
+
+  // ── SECTION 1: Department-wise Performance ────────────────────────
+  html+=`<div class="card">
+    <div class="card-head">
+      <div class="card-icon"><svg viewBox="0 0 16 16" fill="white"><path d="M1 12V5l7-4 7 4v7H1z" fill="none" stroke="white" stroke-width="1.2"/><rect x="5" y="8" width="2.5" height="4"/><rect x="8.5" y="8" width="2.5" height="4"/></svg></div>
+      <h2>DEPARTMENT-WISE PERFORMANCE</h2>
+      <span style="margin-left:auto;font-size:.74rem;color:#888;">${rangeLabel}</span>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">`;
+
+  Object.entries(deptGroups).forEach(([dept,{officers}])=>{
+    const submCount=officers.filter(m=>submittedNames.has(m[0])).length;
+    const total=officers.length;
+    const rate=total?Math.round(submCount/total*100):0;
+    const barCol=rate>=80?'#4CAF50':rate>=50?'#FF9800':'#F44336';
+    const fullOk=officers.filter(m=>byOfficer[m[0]]&&byOfficer[m[0]].days.size===totalWorkDays).length;
+    const partOk=officers.filter(m=>byOfficer[m[0]]&&byOfficer[m[0]].days.size>0&&byOfficer[m[0]].days.size<totalWorkDays).length;
+    const none=total-fullOk-partOk;
+    html+=`<div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);">
+      <div style="font-family:var(--font-head);font-size:.78rem;font-weight:700;letter-spacing:.5px;color:#0D47A1;margin-bottom:8px;">${dept}</div>
+      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#555;margin-bottom:5px;">
+        <span>${submCount} / ${total} officers submitted</span>
+        <b style="color:${barCol}">${rate}%</b>
+      </div>
+      <div style="background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden;margin-bottom:8px;">
+        <div style="height:100%;width:${rate}%;background:${barCol};border-radius:4px;transition:width .4s;"></div>
+      </div>
+      <div style="display:flex;gap:10px;font-size:.68rem;">
+        <span style="color:#2E7D32;">🟢 Full: ${fullOk}</span>
+        <span style="color:#B7410E;">🟡 Partial: ${partOk}</span>
+        <span style="color:#C62828;">🔴 Zero: ${none}</span>
+      </div>
+    </div>`;
+  });
+  html+=`</div></div></div>`;
+
+  // ── SECTION 2: Individual Officer Analysis ────────────────────────
+  html+=`<div class="card">
+    <div class="card-head">
+      <div class="card-icon"><svg viewBox="0 0 16 16" fill="white"><path d="M8 2a3 3 0 100 6A3 3 0 008 2zM4 12c0-2 1.8-3.5 4-3.5S12 10 12 12v1H4v-1z"/></svg></div>
+      <h2>INDIVIDUAL OFFICER ANALYSIS</h2>
+      <span style="margin-left:auto;font-size:.74rem;color:#888;">${totalWorkDays} working days in range</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:28px;">#</th>
+        <th>Officer Name</th>
+        <th>Designation / Dept</th>
+        <th style="text-align:center;">Compliance</th>
+        <th>Day-by-Day Status</th>
+        <th>Inspections Carried Out</th>
+        <th>Photos</th>
+      </tr></thead>
+      <tbody>`;
+
+  // Sort: full compliant first, then by days desc, then zero at bottom
+  const allOfficers = REVIEW_MASTER.map(m=>({
+    name:m[0], desig:m[1], dept:m[2],
+    data: byOfficer[m[0]]||null
+  }));
+  allOfficers.sort((a,b)=>{
+    const ad=a.data?a.data.days.size:0, bd=b.data?b.data.days.size:0;
+    return bd-ad;
+  });
+
+  allOfficers.forEach((officer,i)=>{
+    const info=officer.data;
+    const submDays=info?[...info.days].sort():[];
+    const pct=totalWorkDays?Math.round(submDays.length/totalWorkDays*100):0;
+    const badge=complianceBadge(pct);
+    const dayChipsHtml=workingDays.map(d=>dayChip(d,info&&info.days.has(d))).join('');
+    const uniqueInsp=info?[...new Set(info.inspections)]:[];
+    const inspHtml=uniqueInsp.length?uniqueInsp.map(x=>`<span style="display:inline-block;background:#f5f5f5;border-radius:3px;padding:1px 6px;margin:1px;font-size:.68rem;">${x}</span>`).join(' '):'<span style="color:#bbb;font-size:.68rem;">— None —</span>';
+    const uniquePhotos=info?[...new Set(info.photos)]:[];
     const rowId='rng'+i;
-    const uniquePhotos=[...new Set(info.photos)];
     rangePhotoState[rowId]={photos:uniquePhotos,idx:0};
     const photoHtml=rangePhotoCell(rowId,uniquePhotos);
-    return `<tr>
-      <td style="font-family:var(--font-mono);font-size:.72rem;color:#aaa;">${i+1}</td>
-      <td style="font-weight:600;">${name}</td>
-      <td style="font-size:.75rem;color:#555;">${info.desig}</td>
-      <td style="font-size:.72rem;color:#1565C0;">${info.dept}</td>
-      <td style="text-align:center;"><span class="count-pill">${info.days.size}</span></td>
-      <td style="text-align:center;"><span class="count-pill" style="background:#FFF0F0;color:var(--crimson);">${missingDays.length}</span></td>
-      <td>${submHtml}</td>
-      <td>${missHtml}</td>
+    const rowBg=!info?'background:#FFF8F8;':pct===100?'background:#F9FFF9;':'';
+    html+=`<tr style="${rowBg}">
+      <td style="font-family:var(--font-mono);font-size:.7rem;color:#aaa;">${i+1}</td>
+      <td style="font-weight:700;">${officer.name}</td>
+      <td><span style="font-size:.76rem;">${officer.desig}</span><br/><span style="font-size:.66rem;color:#1565C0;">${officer.dept}</span></td>
+      <td style="text-align:center;white-space:nowrap;">
+        ${badge}<br/>
+        <span style="font-size:.66rem;color:#888;font-family:var(--font-mono);">${submDays.length}/${totalWorkDays} days</span>
+      </td>
+      <td style="min-width:200px;">${dayChipsHtml||'<span style="color:#bbb;font-size:.68rem;">No submissions</span>'}</td>
+      <td>${inspHtml}</td>
       <td>${photoHtml}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">No data for selected working days.</td></tr>';
+  });
 
-  document.getElementById('rangeDefCount').textContent=neverSubmitted.length+' officers';
-  const dtb=document.getElementById('rangeDefaulterTableBody');
-  dtb.innerHTML=neverSubmitted.map((d,i)=>`
-    <tr class="def-row">
-      <td style="font-family:var(--font-mono);font-size:.72rem;color:#aaa;">${i+1}</td>
-      <td style="font-weight:600;color:var(--crimson);">${d[0]}</td>
-      <td style="font-size:.77rem;color:#555;">${d[1]}</td>
-      <td style="font-size:.77rem;color:#1565C0;">${d[2]}</td>
-      <td><span class="def-badge">⚠ Zero Submission</span></td>
-    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--success);padding:12px;">✔ All officers submitted at least once in this date range</td></tr>';
+  html+=`</tbody></table></div></div></div>`;
+
+  // ── SECTION 3: Zero Submission List ────────────────────────
+  if(neverSubmitted.length){
+    html+=`<div class="card">
+      <div class="card-head" style="background:linear-gradient(90deg,#FFF0F0,white);">
+        <div class="card-icon" style="background:var(--crimson-mid);"><svg viewBox="0 0 16 16"><path d="M8 1L1 14h14L8 1zm0 3l4.5 8h-9L8 4zm-.5 3v3h1V7h-1zm0 4v1h1v-1h-1z" fill="white"/></svg></div>
+        <h2 style="color:var(--crimson-mid);">ZERO SUBMISSION — ${neverSubmitted.length} OFFICER${neverSubmitted.length!==1?'S':''}</h2>
+      </div>
+      <div class="card-body" style="padding:0;"><div class="tbl-wrap"><table>
+        <thead><tr><th style="width:28px;">#</th><th>Officer Name</th><th>Designation</th><th>Department</th><th>Status</th></tr></thead>
+        <tbody>
+        ${neverSubmitted.map((d,i)=>`<tr class="def-row">
+          <td style="font-family:var(--font-mono);font-size:.7rem;color:#aaa;">${i+1}</td>
+          <td style="font-weight:700;color:var(--crimson);">${d[0]}</td>
+          <td style="font-size:.76rem;">${d[1]}</td>
+          <td style="font-size:.72rem;color:#1565C0;">${d[2]}</td>
+          <td><span class="def-badge">⚠ No Report Submitted</span></td>
+        </tr>`).join('')}
+        </tbody>
+      </table></div></div>
+    </div>`;
+  }
+
+  output.innerHTML=html;
 }
 
+/* ── Photo cell (range) ── */
 function rangePhotoCell(rowId,photos){
   if(!photos.length) return '<span style="color:#bbb;font-size:.72rem;">— No photo —</span>';
   const previewUrl=toDrivePreviewUrl(photos[0]);
@@ -2589,8 +2627,7 @@ function rangePhotoCell(rowId,photos){
       <img id="rngimg_${rowId}" src="${toDirectImageUrl(photos[0])}" style="max-width:100%;max-height:100%;object-fit:cover;display:block;" onerror="rangePhotoImgFail('${rowId}')"/>
       <iframe id="rngframe_${rowId}" src="${previewUrl||''}" style="display:none;width:100%;height:100%;border:none;" allow="autoplay"></iframe>
       <a id="rngfallback_${rowId}" href="${photos[0]}" target="_blank" rel="noopener" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:4px;text-decoration:none;color:#1565C0;font-size:.7rem;background:#E3F2FD;">📷<span>Open Photo</span></a>
-      ${photos.length>1?`
-      <button onclick="rangeSlidePhoto('${rowId}',-1)" style="position:absolute;left:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:white;cursor:pointer;font-size:16px;line-height:1;">‹</button>
+      ${photos.length>1?`<button onclick="rangeSlidePhoto('${rowId}',-1)" style="position:absolute;left:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:white;cursor:pointer;font-size:16px;line-height:1;">‹</button>
       <button onclick="rangeSlidePhoto('${rowId}',1)" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:white;cursor:pointer;font-size:16px;line-height:1;">›</button>`:''}
     </div>
     <div style="display:flex;justify-content:space-between;margin-top:3px;">
@@ -2599,43 +2636,136 @@ function rangePhotoCell(rowId,photos){
     </div>
   </div>`;
 }
-
 function rangePhotoImgFail(rowId){
-  const img=document.getElementById('rngimg_'+rowId);
-  const frame=document.getElementById('rngframe_'+rowId);
-  const fb=document.getElementById('rngfallback_'+rowId);
+  const img=document.getElementById('rngimg_'+rowId),frame=document.getElementById('rngframe_'+rowId),fb=document.getElementById('rngfallback_'+rowId);
   if(img) img.style.display='none';
-  if(frame&&frame.getAttribute('src')) frame.style.display='block';
-  else if(fb) fb.style.display='flex';
+  if(frame&&frame.getAttribute('src')) frame.style.display='block'; else if(fb) fb.style.display='flex';
 }
-
 function rangeSlidePhoto(rowId,dir){
-  const st=rangePhotoState[rowId];
-  if(!st||!st.photos.length) return;
+  const st=rangePhotoState[rowId]; if(!st||!st.photos.length) return;
   st.idx=(st.idx+dir+st.photos.length)%st.photos.length;
   const url=st.photos[st.idx];
-  const img=document.getElementById('rngimg_'+rowId);
-  const frame=document.getElementById('rngframe_'+rowId);
-  const fb=document.getElementById('rngfallback_'+rowId);
-  const cnt=document.getElementById('rngcount_'+rowId);
-  const open=document.getElementById('rngopen_'+rowId);
-  if(img){ img.style.display='block'; img.src=toDirectImageUrl(url); }
-  if(frame){ frame.style.display='none'; frame.src=toDrivePreviewUrl(url)||''; }
-  if(fb){ fb.style.display='none'; fb.href=url; }
+  const img=document.getElementById('rngimg_'+rowId),frame=document.getElementById('rngframe_'+rowId),fb=document.getElementById('rngfallback_'+rowId),cnt=document.getElementById('rngcount_'+rowId),open=document.getElementById('rngopen_'+rowId);
+  if(img){img.style.display='block';img.src=toDirectImageUrl(url);}
+  if(frame){frame.style.display='none';frame.src=toDrivePreviewUrl(url)||'';}
+  if(fb){fb.style.display='none';fb.href=url;}
   if(cnt) cnt.textContent=(st.idx+1)+' / '+st.photos.length;
   if(open) open.href=url;
 }
 
-// Init range dates on load (add to window.onload via setMode init)
+/* ── PDF Export ── */
+async function generateRangePDF(){
+  if(!rangeData.length){alert('No data loaded.');return;}
+  const overlay=document.getElementById('loadingOverlay'); overlay.classList.add('show');
+  await new Promise(r=>setTimeout(r,100));
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'l',unit:'mm',format:'a4'}); // landscape for wide table
+    const W=297,margin=14;
+    let y=0;
+    const from=document.getElementById('rangeFrom').value;
+    const to=document.getElementById('rangeTo').value;
+    const rangeLabel=from&&to?`${rangeFmt(from)} to ${rangeFmt(to)}`:'';
+    const corpName=document.getElementById('corpName').value||'SCMC';
+    const preparedBy=document.getElementById('preparedBy').value||'';
+    const workingDays=rangeGetWorkingDays();
+    const workingSet=new Set(workingDays);
+    const filtered=rangeData.filter(r=>r.ymd&&workingSet.has(r.ymd));
+    const byOfficer={};
+    filtered.forEach(r=>{
+      if(!byOfficer[r.name]) byOfficer[r.name]={desig:r.desig,dept:r.dept,days:new Set(),inspections:[]};
+      if(r.ymd) byOfficer[r.name].days.add(r.ymd);
+      byOfficer[r.name].inspections.push(r.insp);
+    });
+    const submittedNames=new Set(Object.keys(byOfficer));
+    const neverSubmitted=REVIEW_MASTER.filter(m=>!submittedNames.has(m[0]));
+
+    // Cover header
+    doc.setFillColor(13,71,161); doc.rect(0,0,W,28,'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
+    doc.setFontSize(14); doc.text(corpName.toUpperCase()+' — INSPECTION COMPLIANCE REPORT',W/2,10,{align:'center'});
+    doc.setFontSize(9); doc.text('Period: '+rangeLabel,W/2,16,{align:'center'});
+    doc.setFontSize(8); doc.text(`Working Days: ${workingDays.length}  |  Total Entries: ${filtered.length}  |  Prepared by: ${preparedBy}  |  Generated: ${new Date().toLocaleDateString('en-IN')}`,W/2,22,{align:'center'});
+    doc.setTextColor(0,0,0);
+    y=34;
+
+    // Dept summary table
+    doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    doc.text('DEPARTMENT-WISE SUMMARY',margin,y); y+=5;
+    const deptMap2={};
+    REVIEW_MASTER.forEach(m=>{ if(!deptMap2[m[2]]) deptMap2[m[2]]={total:0,sub:0}; deptMap2[m[2]].total++; if(submittedNames.has(m[0])) deptMap2[m[2]].sub++; });
+    const deptRows=Object.entries(deptMap2).map(([dept,{total,sub}])=>[dept,total,sub,total-sub,Math.round(sub/total*100)+'%']);
+    doc.autoTable({startY:y,head:[['Department','Total Officers','Submitted','Not Submitted','Rate%']],body:deptRows,
+      headStyles:{fillColor:[13,71,161],textColor:255,fontSize:7,fontStyle:'bold'},
+      bodyStyles:{fontSize:7},columnStyles:{4:{halign:'center'},1:{halign:'center'},2:{halign:'center'},3:{halign:'center'}},
+      margin:{left:margin,right:margin},tableWidth:W-margin*2});
+    y=doc.lastAutoTable.finalY+8;
+
+    // Individual officer table
+    doc.addPage();
+    doc.setFillColor(13,71,161); doc.rect(0,0,W,14,'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(10);
+    doc.text('INDIVIDUAL OFFICER ANALYSIS — '+rangeLabel,W/2,9,{align:'center'});
+    doc.setTextColor(0,0,0);
+    y=18;
+    const allOfficerRows=REVIEW_MASTER.map((m,idx)=>{
+      const info=byOfficer[m[0]];
+      const subDays=info?info.days.size:0;
+      const pct=workingDays.length?Math.round(subDays/workingDays.length*100):0;
+      const submOn=info?[...info.days].sort().map(d=>rangeFmtShort(d)).join(', '):'—';
+      const missOn=info?workingDays.filter(d=>!info.days.has(d)).map(d=>rangeFmtShort(d)).join(', ') : workingDays.map(d=>rangeFmtShort(d)).join(', ');
+      return [idx+1,m[0],m[1],m[2],`${subDays}/${workingDays.length}`,pct+'%',submOn||'None',missOn||'All covered'];
+    });
+    doc.autoTable({startY:y,
+      head:[['#','Officer Name','Designation','Department','Days','Rate%','Submitted On','Not Submitted On']],
+      body:allOfficerRows,
+      headStyles:{fillColor:[13,71,161],textColor:255,fontSize:6.5,fontStyle:'bold'},
+      bodyStyles:{fontSize:6,cellPadding:1.5},
+      columnStyles:{0:{cellWidth:8,halign:'center'},4:{cellWidth:16,halign:'center'},5:{cellWidth:12,halign:'center'},6:{cellWidth:55},7:{cellWidth:55}},
+      didParseCell:function(data){
+        if(data.section==='body'&&data.column.index===5){
+          const v=parseInt(data.cell.raw);
+          if(v>=80) data.cell.styles.textColor=[46,125,50];
+          else if(v>=50) data.cell.styles.textColor=[183,65,14];
+          else data.cell.styles.textColor=[198,40,40];
+          data.cell.styles.fontStyle='bold';
+        }
+        if(data.section==='body'&&data.column.index===1){
+          const pct=parseInt(allOfficerRows[data.row.index]?.[5]);
+          if(pct===0) data.cell.styles.textColor=[198,40,40];
+        }
+      },
+      margin:{left:margin,right:margin},tableWidth:W-margin*2});
+
+    // Zero submission page if needed
+    if(neverSubmitted.length){
+      doc.addPage();
+      doc.setFillColor(198,40,40); doc.rect(0,0,W,14,'F');
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(10);
+      doc.text(`ZERO SUBMISSION — ${neverSubmitted.length} OFFICER(S)`,W/2,9,{align:'center'});
+      doc.setTextColor(0,0,0); y=18;
+      doc.autoTable({startY:y,head:[['#','Officer Name','Designation','Department','Status']],
+        body:neverSubmitted.map((d,i)=>[i+1,d[0],d[1],d[2],'No Report Submitted']),
+        headStyles:{fillColor:[198,40,40],textColor:255,fontSize:7,fontStyle:'bold'},
+        bodyStyles:{fontSize:7,textColor:[198,40,40]},
+        margin:{left:margin,right:margin},tableWidth:W-margin*2});
+    }
+    const fname=`Range_Report_${from}_to_${to}.pdf`;
+    doc.save(fname);
+  } catch(e){ alert('PDF error: '+e.message); }
+  finally{ overlay.classList.remove('show'); }
+}
+
 (function initRange(){
-  const today=new Date();
-  const first=new Date(today.getFullYear(),today.getMonth(),1);
-  const last=new Date(today.getFullYear(),today.getMonth()+1,0);
   window.addEventListener('DOMContentLoaded',function(){
+    const today=new Date();
+    const first=new Date(today.getFullYear(),today.getMonth(),1);
+    const last=new Date(today.getFullYear(),today.getMonth()+1,0);
     const f=document.getElementById('rangeFrom');
     const t=document.getElementById('rangeTo');
     if(f) f.value=rangeToYMD(first);
     if(t) t.value=rangeToYMD(last);
+    buildRangeCalendar();
   });
 })();
 
