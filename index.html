@@ -2645,23 +2645,49 @@ async function generateRangePDF(){
     const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
     const W=210, H=297, margin=14;
     let y=0;
+
     const from=document.getElementById('rangeFrom').value;
     const to=document.getElementById('rangeTo').value;
     const fmtDate=v=>v?new Date(v+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
     const rangeLabel=`${fmtDate(from)} to ${fmtDate(to)}`;
     const corpName=document.getElementById('corpName').value||'SCMC';
     const prepBy=document.getElementById('preparedBy').value||'';
-    const workingDays=rangeGetWorkingDays(); const workingSet=new Set(workingDays); const nDays=workingDays.length||1;
-    const filtered=rangeData.filter(r=>r.ymd&&workingSet.has(r.ymd));
-    const byOff={};
-    filtered.forEach(r=>{ if(!byOff[r.name]) byOff[r.name]={desig:r.desig,zone:r.zone,dept:r.dept,days:new Set(),count:0,inspTypes:new Set()}; byOff[r.name].count++; byOff[r.name].inspTypes.add(r.insp); if(r.ymd) byOff[r.name].days.add(r.ymd); });
-    const sortedOff=Object.entries(byOff).sort((a,b)=>b[1].days.size-a[1].days.size||b[1].count-a[1].count);
-    const notSub=masterList.filter(m=>(byOff[m[0]]?.days.size||0)<=nDays-3).map(m=>({name:m[0],desig:m[1],dept:deptMap2(m[0]),submitted:byOff[m[0]]?.days.size||0})).sort((a,b)=>a.submitted-b.submitted);
 
+    const workingDays=rangeGetWorkingDays();
+    const workingSet=new Set(workingDays);
+    const nDays=workingDays.length||1;
+    const filtered=rangeData.filter(r=>r.ymd&&workingSet.has(r.ymd));
+
+    // Build per-officer data
+    const byOff={};
+    filtered.forEach(r=>{
+      if(!byOff[r.name]) byOff[r.name]={desig:r.desig,zone:r.zone,dept:r.dept,days:new Set(),count:0,inspTypes:new Set()};
+      byOff[r.name].count++; byOff[r.name].inspTypes.add(r.insp);
+      if(r.ymd) byOff[r.name].days.add(r.ymd);
+    });
+    const byZone={};
+    filtered.forEach(r=>{ const z=r.zone||'UNK'; if(!byZone[z]) byZone[z]={count:0,officers:new Set()}; byZone[z].count++; byZone[z].officers.add(r.name); });
+    const sortedOff=Object.entries(byOff).sort((a,b)=>b[1].count-a[1].count);
+    const notSub=masterList.filter(m=>(byOff[m[0]]?.days.size||0)<=nDays-3)
+      .map(m=>({name:m[0],desig:m[1],dept:deptMap2(m[0]),submitted:byOff[m[0]]?.days.size||0}))
+      .sort((a,b)=>a.submitted-b.submitted);
+
+    // Logo
     const logoImg=new Image(); logoImg.src=LOGO_B64;
     await new Promise(r=>{ logoImg.onload=r; logoImg.onerror=r; });
-    function mkLogo(){ try{ const sz=80,oc=document.createElement('canvas'); oc.width=sz; oc.height=sz; const cx=oc.getContext('2d'); cx.beginPath(); cx.arc(sz/2,sz/2,sz/2,0,Math.PI*2); cx.fillStyle='#fff'; cx.fill(); cx.save(); cx.beginPath(); cx.arc(sz/2,sz/2,sz/2-1,0,Math.PI*2); cx.clip(); cx.drawImage(logoImg,0,0,sz,sz); cx.restore(); return oc.toDataURL('image/png'); }catch(e){return null;} }
-    const logoPng=mkLogo();
+    function makeCircleLogo(){
+      try{
+        const sz=80,oc=document.createElement('canvas'); oc.width=sz; oc.height=sz;
+        const cx=oc.getContext('2d');
+        cx.beginPath(); cx.arc(sz/2,sz/2,sz/2,0,Math.PI*2); cx.fillStyle='#fff'; cx.fill();
+        cx.save(); cx.beginPath(); cx.arc(sz/2,sz/2,sz/2-1,0,Math.PI*2); cx.clip();
+        cx.drawImage(logoImg,0,0,sz,sz); cx.restore();
+        return oc.toDataURL('image/png');
+      }catch(e){ return null; }
+    }
+    const logoPng=makeCircleLogo();
+
+    function checkPage(n){ if(y+n>H-16){ doc.addPage(); y=0; drawHeader(); } }
 
     function drawHeader(){
       doc.setFillColor(21,101,192); doc.rect(0,0,W,30,'F');
@@ -2671,112 +2697,192 @@ async function generateRangePDF(){
       doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(255,255,255);
       doc.text(corpName.toUpperCase(), tx, 11);
       doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(200,225,255);
-      doc.text('DATE RANGE INSPECTION REPORT', tx, 17);
+      doc.text('DATE RANGE FIELD INSPECTION REPORT', tx, 17);
       doc.text('Period: '+rangeLabel+' ('+nDays+' working days)', tx, 23);
-      doc.setFontSize(7); doc.text('Prepared by: '+prepBy, W-margin, 19, {align:'right'});
+      doc.setFontSize(7); doc.setTextColor(200,225,255);
+      doc.text('Prepared by: '+prepBy, W-margin, 19, {align:'right'});
       y=34;
     }
-    function drawSecHead(title){ checkPage(12); doc.setFillColor(13,71,161); doc.rect(margin,y,W-margin*2,7,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255); doc.text(title,margin+4,y+5); y+=10; }
-    function checkPage(n){ if(y+n>H-16){ doc.addPage(); y=0; drawHeader(); } }
+
+    function drawSecHead(title){
+      checkPage(12);
+      doc.setFillColor(13,71,161); doc.rect(margin,y,W-margin*2,7,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255);
+      doc.text(title, margin+4, y+5); y+=10;
+    }
 
     drawHeader();
 
     // 1. Summary boxes
     drawSecHead('1. SUMMARY');
-    const sItems=[['TOTAL ENTRIES',filtered.length,'#1A4A8B'],['WORKING DAYS',nDays,'#0E6655'],['ACTIVE OFFICERS',Object.keys(byOff).length,'#1A6B3A'],['NOT SUBMITTED REPORT',notSub.length,'#C0392B']];
+    const sItems=[
+      ['TOTAL ENTRIES',filtered.length,'#1A4A8B'],
+      ['WORKING DAYS',nDays,'#0E6655'],
+      ['ACTIVE OFFICERS',Object.keys(byOff).length,'#1A6B3A'],
+      ['NOT SUBMITTED REPORT',notSub.length,'#C0392B'],
+    ];
     const sw=(W-margin*2)/4;
-    sItems.forEach((item,i)=>{ const bx=margin+i*sw,bw=sw-3; doc.setFillColor(245,249,255); doc.roundedRect(bx,y,bw,18,2,2,'F'); doc.setDrawColor(200,220,240); doc.roundedRect(bx,y,bw,18,2,2,'S'); const [r,g,b]=hexToRgb(item[2]); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(r,g,b); doc.text(String(item[1]),bx+bw/2,y+10,{align:'center'}); doc.setFontSize(5.5); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100); doc.text(item[0],bx+bw/2,y+15.5,{align:'center'}); });
+    sItems.forEach((item,i)=>{
+      const bx=margin+i*sw, bw=sw-3;
+      doc.setFillColor(245,249,255); doc.roundedRect(bx,y,bw,18,2,2,'F');
+      doc.setDrawColor(200,220,240); doc.roundedRect(bx,y,bw,18,2,2,'S');
+      const [r,g,b]=hexToRgb(item[2]);
+      doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(r,g,b);
+      doc.text(String(item[1]),bx+bw/2,y+10,{align:'center'});
+      doc.setFontSize(5.5); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+      doc.text(item[0],bx+bw/2,y+15.5,{align:'center'});
+    });
     y+=24;
 
-    // 2. Department analysis
-    drawSecHead('2. DEPARTMENT-WISE ANALYSIS');
+    // 2. Zone summary
+    drawSecHead('2. ZONE-WISE SUMMARY');
+    const zCols={'HASTH':'#E63946','SURAM':'#2A9D8F','AMMAP':'#E9C46A','KOND':'#6A4C93'};
+    const zTotal=Object.values(byZone).reduce((a,b)=>a+b.count,0)||1;
+    Object.entries(byZone).sort((a,b)=>b[1].count-a[1].count).forEach(([z,info])=>{
+      checkPage(10);
+      const pct=Math.round(info.count/zTotal*100);
+      const col=Object.entries(zCols).find(([k])=>z.includes(k))?.[1]||'#555';
+      const [r,g,b]=hexToRgb(col);
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(40,40,40);
+      doc.text(z, margin, y+3.5);
+      doc.setFont('helvetica','normal'); doc.setTextColor(r,g,b);
+      doc.text(`${info.count} entries · ${info.officers.size} officers · ${pct}%`, margin+60, y+3.5);
+      doc.setFillColor(240,244,248); doc.roundedRect(margin+130,y,W-margin-130-margin,4,1,1,'F');
+      doc.setFillColor(r,g,b); doc.roundedRect(margin+130,y,(W-margin-130-margin)*pct/100,4,1,1,'F');
+      y+=9;
+    });
+    y+=4;
+
+    // 3. Department-wise analysis
+    drawSecHead('3. DEPARTMENT-WISE ANALYSIS');
     const deptGrp={};
     REVIEW_MASTER.forEach(m=>{
       if(!deptGrp[m[2]]) deptGrp[m[2]]={total:0,officers:[]};
       deptGrp[m[2]].total++; deptGrp[m[2]].officers.push({name:m[0],desig:m[1]});
     });
-    const deptHdrs=['Department','Officers','Expected','Days Sub','Days Miss','Compliance%'];
-    const deptX=[margin,margin+42,margin+60,margin+80,margin+102,margin+124];
-    doc.setFillColor(21,101,192); doc.rect(margin,y,W-margin*2,7,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255);
-    deptHdrs.forEach((h,i)=>doc.text(h,deptX[i]+1,y+5)); y+=8;
-    Object.entries(deptGrp).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([dept,{total,officers}],i)=>{
-      checkPage(8);
-      const offStats=officers.map(o=>({ name:o.name, days:byOff[o.name]?.days.size||0 }));
+
+    Object.entries(deptGrp).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([dept,{total,officers}])=>{
+      // Dept header row
+      const offStats=officers.map(o=>({name:o.name,desig:o.desig,days:byOff[o.name]?.days.size||0}));
       const totalExpected=total*nDays;
       const totalSub=offStats.reduce((s,o)=>s+o.days,0);
       const totalMiss=totalExpected-totalSub;
       const pct=totalExpected?Math.round(totalSub/totalExpected*100):0;
-      if(i%2===0) doc.setFillColor(255,255,255); else doc.setFillColor(245,249,255);
-      doc.rect(margin,y,W-margin*2,7,'F'); doc.setDrawColor(220,230,240); doc.line(margin,y+7,W-margin,y+7);
-      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(26,26,46); doc.text(dept,deptX[0]+1,y+5);
-      doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80); doc.text(String(total),deptX[1]+1,y+5);
-      doc.text(String(totalExpected),deptX[2]+1,y+5);
-      doc.setTextColor(46,125,50); doc.setFont('helvetica','bold'); doc.text(String(totalSub),deptX[3]+1,y+5);
-      doc.setTextColor(198,40,40); doc.text(String(totalMiss),deptX[4]+1,y+5);
-      if(pct>=80) doc.setTextColor(46,125,50); else if(pct>=50) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
-      doc.text(pct+'%',deptX[5]+1,y+5);
-      y+=7;
-      // Officer breakdown sub-rows
-      offStats.sort((a,b)=>b.days-a.days).forEach(o=>{
-        checkPage(6);
+      const barCol=pct>=80?[46,125,50]:pct>=50?[183,65,14]:[198,40,40];
+
+      checkPage(10);
+      doc.setFillColor(230,236,245); doc.rect(margin,y,W-margin*2,7,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(13,71,161);
+      doc.text(dept, margin+3, y+5);
+      doc.setTextColor(80,80,80); doc.setFont('helvetica','normal');
+      doc.text(`${total} officers  |  Expected: ${totalExpected}  |  Submitted: ${totalSub}  |  Missed: ${totalMiss}`, margin+45, y+5);
+      doc.setFont('helvetica','bold'); doc.setTextColor(...barCol);
+      doc.text(`${pct}%`, W-margin-8, y+5, {align:'right'});
+      // progress bar
+      doc.setFillColor(220,225,235); doc.rect(W-margin-40,y+2,32,3,'F');
+      doc.setFillColor(...barCol); doc.rect(W-margin-40,y+2,32*pct/100,3,'F');
+      y+=8;
+
+      // Officer sub-rows
+      offStats.sort((a,b)=>b.days-a.days).forEach((o,oi)=>{
+        checkPage(7);
         const opct=nDays?Math.round(o.days/nDays*100):0;
-        doc.setFillColor(252,252,255); doc.rect(margin,y,W-margin*2,5.5,'F');
-        doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(80,80,80);
-        doc.text('   └ '+o.name,deptX[0]+1,y+4);
-        if(opct>=80) doc.setTextColor(46,125,50); else if(opct>0) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
-        doc.setFont('helvetica','bold'); doc.text(`${o.days}/${nDays} days (${opct}%)`,deptX[3]+1,y+4);
-        y+=5.5;
+        const oCol=opct===100?[46,125,50]:opct===0?[198,40,40]:[183,65,14];
+        if(oi%2===0) doc.setFillColor(252,252,255); else doc.setFillColor(255,255,255);
+        doc.rect(margin,y,W-margin*2,6,'F');
+        doc.setDrawColor(230,233,240); doc.line(margin,y+6,W-margin,y+6);
+        doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(40,40,40);
+        doc.text('  '+o.name, margin+4, y+4.3);
+        doc.setTextColor(100,100,100);
+        doc.text(o.desig, margin+60, y+4.3);
+        doc.setFont('helvetica','bold'); doc.setTextColor(...oCol);
+        doc.text(`${o.days}/${nDays} days`, margin+130, y+4.3);
+        doc.text(`(${opct}%)`, margin+152, y+4.3);
+        y+=6;
       });
-      y+=2;
+      y+=3;
     });
-    y+=5;
+    y+=3;
 
-    // 3. Officer table
-    drawSecHead('3. OFFICER-WISE ANALYSIS');
-    const ohdr=['Name','Desig','Dept','Zone','Total','Days','Missed','Avg'];
-    const ocx=[margin,margin+30,margin+68,margin+100,margin+118,margin+130,margin+142,margin+156];
-    function drawOHdr(){ doc.setFillColor(21,101,192); doc.rect(margin,y,W-margin*2,7,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255); ohdr.forEach((h,i)=>doc.text(h,ocx[i]+1,y+5)); y+=8; }
+    // 4. Officer table
+    drawSecHead('4. OFFICER-WISE ANALYSIS');
+    const ohdr=['Name','Desig','Dept','Zone','Total','Days','Avg'];
+    const ocx=[margin,margin+34,margin+72,margin+106,margin+124,margin+136,margin+152];
+
+    function drawOHdr(){
+      doc.setFillColor(21,101,192); doc.rect(margin,y,W-margin*2,7,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255);
+      ohdr.forEach((h,i)=>doc.text(h,ocx[i]+1,y+5)); y+=8;
+    }
     drawOHdr();
-    sortedOff.forEach(([name,info],i)=>{
+
+    sortedOff.forEach(([name,info],idx)=>{
       if(y+7>H-16){ doc.addPage(); y=34; drawHeader(); drawOHdr(); }
-      const missed=nDays-info.days.size; const pct=Math.round(info.days.size/nDays*100);
-      if(i%2===0) doc.setFillColor(255,255,255); else doc.setFillColor(245,249,255); doc.rect(margin,y,W-margin*2,7,'F'); doc.setDrawColor(220,230,240); doc.line(margin,y+7,W-margin,y+7);
-      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(26,26,46); doc.text(name,ocx[0]+1,y+5);
-      doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80); doc.text(info.desig.slice(0,16),ocx[1]+1,y+5); doc.text((info.dept||'').slice(0,14),ocx[2]+1,y+5); doc.text(info.zone.slice(0,12),ocx[3]+1,y+5);
-      doc.setFillColor(21,101,192); doc.roundedRect(ocx[4],y+1.5,11,4,1,1,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(255,255,255); doc.text(String(info.count),ocx[4]+5.5,y+5,{align:'center'});
-      if(pct>=80) doc.setTextColor(46,125,50); else if(pct>=50) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
+      if(idx%2===0) doc.setFillColor(255,255,255); else doc.setFillColor(245,249,255);
+      doc.rect(margin,y,W-margin*2,7,'F');
+      doc.setDrawColor(220,230,240); doc.line(margin,y+7,W-margin,y+7);
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(26,26,46);
+      doc.text(name,ocx[0]+1,y+5);
+      doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+      doc.text(info.desig.slice(0,16),ocx[1]+1,y+5);
+      doc.text((info.dept||'').slice(0,13),ocx[2]+1,y+5);
+      doc.text(info.zone.slice(0,12),ocx[3]+1,y+5);
+      doc.setFillColor(21,101,192); doc.roundedRect(ocx[4],y+1.5,13,4,1,1,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(255,255,255);
+      doc.text(String(info.count),ocx[4]+6.5,y+5,{align:'center'});
+      const dpct=nDays?Math.round(info.days.size/nDays*100):0;
+      if(dpct>=80) doc.setTextColor(46,125,50); else if(dpct>0) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
       doc.text(`${info.days.size}/${nDays}`,ocx[5]+1,y+5);
-      if(missed===0) doc.setTextColor(46,125,50); else if(missed>=3) doc.setTextColor(198,40,40); else doc.setTextColor(183,65,14);
-      doc.text(String(missed),ocx[6]+1,y+5);
-      doc.setTextColor(80,80,80); doc.setFont('helvetica','normal'); doc.text((info.count/nDays).toFixed(1),ocx[7]+1,y+5);
+      doc.setTextColor(80,80,80); doc.setFont('helvetica','normal');
+      doc.text((info.count/nDays).toFixed(1),ocx[6]+1,y+5);
       y+=7;
     });
     y+=5;
 
-    // 4. Not submitted
+    // 5. Not submitted
     if(notSub.length){
-      checkPage(20); drawSecHead('4. OFFICERS NOT SUBMITTED REPORT');
-      const defX=[margin,margin+50,margin+100,margin+140,margin+160];
-      function drawDefHdr(){ doc.setFillColor(192,57,43); doc.rect(margin,y,W-margin*2,7,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255); ['Name','Designation','Department','Days Sub','Days Missed'].forEach((h,i)=>doc.text(h,defX[i]+1,y+5)); y+=8; }
+      checkPage(20);
+      drawSecHead('5. OFFICERS NOT SUBMITTED REPORT');
+      const defHdrs=['Name','Designation','Department','Days Submitted','Days Missed'];
+      const defX=[2,52,112,152,167];
+      function drawDefHdr(){
+        doc.setFillColor(192,57,43); doc.rect(margin,y,W-margin*2,7,'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255);
+        defHdrs.forEach((h,i)=>doc.text(h,margin+defX[i],y+5)); y+=8;
+      }
       drawDefHdr();
       notSub.forEach((d,i)=>{
         if(y+7>H-16){ doc.addPage(); y=34; drawHeader(); drawDefHdr(); }
-        const missed=nDays-d.submitted;
-        doc.setFillColor(255,248,248); doc.rect(margin,y,W-margin*2,7,'F'); doc.setDrawColor(240,210,210); doc.line(margin,y+7,W-margin,y+7);
-        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(139,0,0); doc.text(d.name,defX[0]+1,y+5);
-        doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100); doc.text(d.desig,defX[1]+1,y+5); doc.text(d.dept,defX[2]+1,y+5);
-        doc.setTextColor(21,101,192); doc.text(`${d.submitted}/${nDays}`,defX[3]+1,y+5);
-        doc.setTextColor(192,57,43); doc.text(String(missed)+' days',defX[4]+1,y+5);
+        doc.setFillColor(255,248,248); doc.rect(margin,y,W-margin*2,7,'F');
+        doc.setDrawColor(240,210,210); doc.line(margin,y+7,W-margin,y+7);
+        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(139,0,0);
+        doc.text(d.name,margin+defX[0],y+5);
+        doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+        doc.text(d.desig,margin+defX[1],y+5);
+        doc.text(d.dept,margin+defX[2],y+5);
+        doc.setTextColor(21,101,192);
+        doc.text(`${d.submitted}/${nDays}`,margin+defX[3],y+5);
+        doc.setTextColor(192,57,43);
+        doc.text(String(nDays-d.submitted)+' days',margin+defX[4],y+5);
         y+=7;
       });
     }
 
+    // Footer on all pages
     const tp=doc.internal.getNumberOfPages();
-    for(let p=1;p<=tp;p++){ doc.setPage(p); doc.setFillColor(13,71,161); doc.rect(0,H-10,W,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(180,200,220); doc.text(`${corpName} | Date Range Report: ${rangeLabel} | ${prepBy}`,margin,H-4.5); doc.text(`Page ${p} of ${tp}`,W-margin,H-4.5,{align:'right'}); }
-    doc.save(`SCMC_Range_Report_${from}_to_${to}.pdf`);
+    for(let p=1;p<=tp;p++){
+      doc.setPage(p);
+      doc.setFillColor(13,71,161); doc.rect(0,H-10,W,10,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(180,200,220);
+      doc.text(`${corpName} | Date Range Report: ${rangeLabel} | ${prepBy}`, margin, H-4.5);
+      doc.text(`Page ${p} of ${tp}`, W-margin, H-4.5, {align:'right'});
+    }
+
+    doc.save(`SCMC_Range_${from}_to_${to}.pdf`);
   }catch(e){ alert('PDF error: '+e.message); console.error(e); }
   finally{ overlay.classList.remove('show'); }
 }
+
 
 (function initRange(){
   window.addEventListener('DOMContentLoaded',function(){
