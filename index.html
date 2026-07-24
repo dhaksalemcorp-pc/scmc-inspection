@@ -306,6 +306,9 @@ tr:hover td{background:#E3F2FD;}
       <button id="modeReview"
         style="padding:5px 20px;border:none;border-left:1.5px solid rgba(255,255,255,.3);font-family:var(--font-head);font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.5px;background:transparent;color:rgba(255,255,255,.6);transition:all .2s;"
         onclick="setMode('review')">🔎 REVIEW</button>
+      <button id="modeRange"
+        style="padding:5px 20px;border:none;border-left:1.5px solid rgba(255,255,255,.3);font-family:var(--font-head);font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.5px;background:transparent;color:rgba(255,255,255,.6);transition:all .2s;"
+        onclick="setMode('range')">📆 DATE RANGE</button>
     </div>
   </div>
   <div class="tabs-bar" style="padding:0 16px;">
@@ -319,6 +322,9 @@ tr:hover td{background:#E3F2FD;}
     </div>
     <div id="reviewTabs" style="display:none;">
       <button class="tab-btn" id="tbtn-review" onclick="switchTab('review')">🔎 Review by Department</button>
+    </div>
+    <div id="rangeTabs" style="display:none;">
+      <button class="tab-btn" id="tbtn-range" onclick="switchTab('range')">📆 Date Range Report</button>
     </div>
   </div>
 </div>
@@ -757,10 +763,146 @@ tr:hover td{background:#E3F2FD;}
   </div>
 
 </div><!-- /tab-review -->
+
+<!-- TAB: DATE RANGE -->
+<div class="tab-panel" id="tab-range">
+
+  <!-- Date Range Config Card -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon"><svg viewBox="0 0 16 16" fill="white"><rect x="1" y="2" width="14" height="12" rx="1" fill="none" stroke="white" stroke-width="1.2"/><path d="M5 1v2M11 1v2M1 6h14" stroke="white" stroke-width="1.2"/><rect x="3" y="8" width="2" height="2" rx=".3"/><rect x="7" y="8" width="2" height="2" rx=".3"/><rect x="11" y="8" width="2" height="2" rx=".3"/><rect x="3" y="11" width="2" height="2" rx=".3"/><rect x="7" y="11" width="2" height="2" rx=".3"/></svg></div>
+      <h2>DATE RANGE CONFIGURATION</h2>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;">
+        <div>
+          <div class="section-label">From Date</div>
+          <input type="date" class="date-input" id="rangeFrom" onchange="buildRangeCalendar()"/>
+        </div>
+        <div>
+          <div class="section-label">To Date</div>
+          <input type="date" class="date-input" id="rangeTo" onchange="buildRangeCalendar()"/>
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="rangeSetThisWeek()">This Week</button>
+        </div>
+        <div>
+          <button class="btn btn-outline" onclick="rangeSetThisMonth()">This Month</button>
+        </div>
+      </div>
+
+      <!-- Exclusion options -->
+      <div style="margin-top:16px;padding:14px 16px;background:#F8F9FD;border-radius:8px;border:1px solid var(--line);">
+        <div class="section-label" style="margin-bottom:10px;">DATES TO EXCLUDE FROM REPORT</div>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.82rem;">
+            <input type="checkbox" id="excludeSunday" checked onchange="buildRangeCalendar()" style="width:15px;height:15px;"/>
+            <span>Exclude <b>Sundays</b></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.82rem;">
+            <input type="checkbox" id="excludeSaturday" onchange="buildRangeCalendar()" style="width:15px;height:15px;"/>
+            <span>Exclude <b>Saturdays</b></span>
+          </label>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="section-label" style="margin-bottom:6px;">ADD CUSTOM HOLIDAY / EXCLUDE DATE</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="date" class="date-input" id="rangeHolidayPick" style="width:auto;"/>
+            <input type="text" class="input-sm" id="rangeHolidayLabel" placeholder="Label (e.g. Pongal)" style="min-width:160px;"/>
+            <button class="btn btn-outline" onclick="rangeAddHoliday()" style="padding:5px 14px;">+ Add</button>
+          </div>
+          <div id="rangeHolidayList" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+      </div>
+
+      <!-- Visual calendar of working days -->
+      <div id="rangeCalendarWrap" style="margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <!-- Paste Data Card -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon"><svg viewBox="0 0 16 16" fill="white"><rect x="2" y="1" width="12" height="14" rx="1" fill="none" stroke="white" stroke-width="1.2"/><path d="M5 5h6M5 8h6M5 11h4" stroke="white" stroke-width="1.2"/></svg></div>
+      <h2>PASTE INSPECTION DATA</h2>
+    </div>
+    <div class="card-body">
+      <div class="section-label">Paste all your Google Sheet data (entire date range). The tool will automatically include only entries falling on selected working days.</div>
+      <textarea class="paste-area" id="rangePasteBox" style="min-height:150px;"
+        placeholder="Paste Google Sheet data here (Ctrl+A → Ctrl+C from Google Sheet)&#10;&#10;Timestamp must be in Column 1. Header row is auto-detected."
+        onpaste="setTimeout(parseRangeData,100)" oninput="parseRangeData()"></textarea>
+      <div class="parse-status" id="rangeParseStatus"></div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="parseRangeData()">Parse & Filter →</button>
+        <button class="btn btn-outline" onclick="document.getElementById('rangePasteBox').value='';rangeData=[];document.getElementById('rangeParseStatus').className='parse-status';renderRangeReport();">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-strip" id="rangeStatsStrip" style="display:none;">
+    <div class="stat-box"><div class="stat-num blue" id="rng_workdays">0</div><div class="stat-label">Working Days</div></div>
+    <div class="stat-box"><div class="stat-num blue" id="rng_total">0</div><div class="stat-label">Total Entries</div></div>
+    <div class="stat-box"><div class="stat-num green" id="rng_submitted">0</div><div class="stat-label">Officers Submitted</div></div>
+    <div class="stat-box"><div class="stat-num red" id="rng_notsubmitted">0</div><div class="stat-label">Never Submitted</div></div>
+  </div>
+
+  <!-- Summary Table -->
+  <div class="card" id="rangeTableCard" style="display:none;">
+    <div class="card-head">
+      <div class="card-icon"><svg viewBox="0 0 16 16"><path d="M8 2a3 3 0 100 6A3 3 0 008 2zM4 12c0-2 1.8-3.5 4-3.5S12 10 12 12v1H4v-1z" fill="white"/></svg></div>
+      <h2>OFFICER SUBMISSION SUMMARY</h2>
+      <span id="rangeDateRangeLabel" style="margin-left:auto;font-size:.74rem;color:#888;"></span>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div class="tbl-wrap">
+        <table id="rangeTable">
+          <thead><tr>
+            <th style="width:30px;">#</th>
+            <th>Officer Name</th>
+            <th>Designation</th>
+            <th>Department</th>
+            <th style="text-align:center;">Days Submitted</th>
+            <th style="text-align:center;">Days Absent</th>
+            <th>Days Submitted On</th>
+            <th>Days Not Submitted</th>
+            <th>Photos</th>
+          </tr></thead>
+          <tbody id="rangeTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Not Submitted at All -->
+  <div class="card" id="rangeDefaulterCard" style="display:none;">
+    <div class="card-head" style="background:linear-gradient(90deg,#FFF0F0,white);">
+      <div class="card-icon" style="background:var(--crimson-mid);"><svg viewBox="0 0 16 16"><path d="M8 1L1 14h14L8 1zm0 3l4.5 8h-9L8 4zm-.5 3v3h1V7h-1zm0 4v1h1v-1h-1z" fill="white"/></svg></div>
+      <h2 style="color:var(--crimson-mid);">OFFICERS — ZERO SUBMISSION IN DATE RANGE</h2>
+      <span id="rangeDefCount" style="margin-left:auto;font-size:.75rem;color:var(--crimson);">0 officers</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:30px;">#</th>
+            <th>Officer Name</th>
+            <th>Designation</th>
+            <th>Department</th>
+            <th>Status</th>
+          </tr></thead>
+          <tbody id="rangeDefaulterTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /tab-range -->
 </div><!-- /app-body -->
 
 <script>
 const DEFAULT_MASTER = [
+  ["KOTTAI KUMAR","DEPUTY COMMISSIONER"],
   ["MAHESHWARI","DEPUTY COMMISSIONER"],
   ["SELVANAYAGAM","SUPERINTENDING ENGINEER"],
   ["RAM KUMAR","CITY HEALTH OFFICER"],
@@ -768,6 +910,7 @@ const DEFAULT_MASTER = [
   ["SUBRAMANIYAN","ASSISTANT COMMISSIONER"],
   ["AMSAVENI","ASSISTANT COMMISSIONER"],
   ["KUMARESAN","ASSISTANT COMMISSIONER"],
+  ["PALANISAMY","EXECUTIVE ENGINEER"],
   ["THANGAMANI","ASSISTANT EXECUTIVE ENGINEER"],
   ["OBULI SUNDAR","ASSISTANT EXECUTIVE ENGINEER"],
   ["SENTHIL KUMAR","ASSISTANT EXECUTIVE ENGINEER"],
@@ -812,6 +955,7 @@ const DEFAULT_MASTER = [
 let masterList = JSON.parse(JSON.stringify(DEFAULT_MASTER));
 
 const REVIEW_MASTER = [
+  ["KOTTAI KUMAR","DEPUTY COMMISSIONER","GENERAL"],
   ["MAHESHWARI","DEPUTY COMMISSIONER","GENERAL"],
   ["SELVANAYAGAM","SUPERINTENDING ENGINEER","ENGINEERING"],
   ["RAM KUMAR","CITY HEALTH OFFICER","PUBLIC HEALTH"],
@@ -819,6 +963,7 @@ const REVIEW_MASTER = [
   ["SUBRAMANIYAN","ASSISTANT COMMISSIONER","GENERAL"],
   ["AMSAVENI","ASSISTANT COMMISSIONER","GENERAL"],
   ["KUMARESAN","ASSISTANT COMMISSIONER","REVENUE"],
+  ["PALANISAMY","EXECUTIVE ENGINEER","TOWNPLANNING"],
   ["THANGAMANI","ASSISTANT EXECUTIVE ENGINEER","TOWNPLANNING"],
   ["OBULI SUNDAR","ASSISTANT EXECUTIVE ENGINEER","ENGINEERING"],
   ["SENTHIL KUMAR","ASSISTANT EXECUTIVE ENGINEER","ENGINEERING"],
@@ -905,24 +1050,28 @@ function updateReviewDate(){
 
 function setMode(mode){
   currentMode = mode;
-  const isDaily = mode === 'daily';
+  const isDaily  = mode === 'daily';
   const isWeekly = mode === 'weekly';
   const isReview = mode === 'review';
+  const isRange  = mode === 'range';
   const md = document.getElementById('modeDaily');
   const mw = document.getElementById('modeWeekly');
   const mr = document.getElementById('modeReview');
-  if(md){ md.style.background = isDaily ? 'white' : 'transparent'; md.style.color = isDaily ? '#0D47A1' : 'rgba(255,255,255,.6)'; }
-  if(mw){ mw.style.background = isWeekly ? 'white' : 'transparent'; mw.style.color = isWeekly ? '#0D47A1' : 'rgba(255,255,255,.6)'; }
-  if(mr){ mr.style.background = isReview ? 'white' : 'transparent'; mr.style.color = isReview ? '#0D47A1' : 'rgba(255,255,255,.6)'; }
+  const mg = document.getElementById('modeRange');
+  [md,mw,mr,mg].forEach(b=>{ if(b){ b.style.background='transparent'; b.style.color='rgba(255,255,255,.6)'; }});
+  const active = isDaily?md:isWeekly?mw:isReview?mr:mg;
+  if(active){ active.style.background='white'; active.style.color='#0D47A1'; }
   const badge = document.getElementById('modeBadgeVal');
-  if(badge) badge.textContent = isDaily ? 'Daily' : isWeekly ? 'Weekly' : 'Review';
+  if(badge) badge.textContent = isDaily?'Daily':isWeekly?'Weekly':isReview?'Review':'Date Range';
   const dt = document.getElementById('dailyTabs');
   const wt = document.getElementById('weeklyTabs');
   const rt = document.getElementById('reviewTabs');
-  if(dt) dt.style.display = isDaily ? 'flex' : 'none';
+  const gt = document.getElementById('rangeTabs');
+  if(dt) dt.style.display = isDaily  ? 'flex' : 'none';
   if(wt) wt.style.display = isWeekly ? 'flex' : 'none';
   if(rt) rt.style.display = isReview ? 'flex' : 'none';
-  switchTab(isDaily ? 'setup' : isWeekly ? 'weekly' : 'review');
+  if(gt) gt.style.display = isRange  ? 'flex' : 'none';
+  switchTab(isDaily?'setup':isWeekly?'weekly':isReview?'review':'range');
   if(isReview) updateReviewDate();
 }
 
@@ -2183,6 +2332,313 @@ function renderReviewTable(){
       </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--success);padding:12px;">✔ All officers in the selected department(s) have submitted their reports</td></tr>';
   }
 }
-</script>
+/* ===================== DATE RANGE MODULE ===================== */
+let rangeData = [];
+let rangeHolidays = {}; // 'YYYY-MM-DD' -> label
+let rangePhotoState = {};
+
+function rangeToYMD(d){ return d.toISOString().split('T')[0]; }
+function rangeFmt(ymd){
+  const d = new Date(ymd+'T00:00:00');
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+function rangeFmtShort(ymd){
+  const d = new Date(ymd+'T00:00:00');
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+}
+function rangeDayName(ymd){
+  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(ymd+'T00:00:00').getDay()];
+}
+
+function rangeSetThisWeek(){
+  const today = new Date();
+  const day = today.getDay();
+  const mon = new Date(today); mon.setDate(today.getDate()-((day+6)%7));
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  document.getElementById('rangeFrom').value = rangeToYMD(mon);
+  document.getElementById('rangeTo').value   = rangeToYMD(sun);
+  buildRangeCalendar();
+}
+
+function rangeSetThisMonth(){
+  const today = new Date();
+  const first = new Date(today.getFullYear(), today.getMonth(), 1);
+  const last  = new Date(today.getFullYear(), today.getMonth()+1, 0);
+  document.getElementById('rangeFrom').value = rangeToYMD(first);
+  document.getElementById('rangeTo').value   = rangeToYMD(last);
+  buildRangeCalendar();
+}
+
+function rangeAddHoliday(){
+  const dp = document.getElementById('rangeHolidayPick');
+  const lp = document.getElementById('rangeHolidayLabel');
+  if(!dp.value) return;
+  rangeHolidays[dp.value] = lp.value.trim() || 'Holiday';
+  dp.value=''; lp.value='';
+  buildRangeCalendar();
+}
+
+function rangeRemoveHoliday(ymd){
+  delete rangeHolidays[ymd];
+  buildRangeCalendar();
+}
+
+function rangeGetWorkingDays(){
+  const from = document.getElementById('rangeFrom').value;
+  const to   = document.getElementById('rangeTo').value;
+  if(!from||!to||from>to) return [];
+  const exSun = document.getElementById('excludeSunday').checked;
+  const exSat = document.getElementById('excludeSaturday').checked;
+  const days = [];
+  let cur = new Date(from+'T00:00:00');
+  const end = new Date(to+'T00:00:00');
+  while(cur<=end){
+    const ymd = rangeToYMD(cur);
+    const dow = cur.getDay();
+    if(!rangeHolidays[ymd] && !(exSun&&dow===0) && !(exSat&&dow===6)){
+      days.push(ymd);
+    }
+    cur.setDate(cur.getDate()+1);
+  }
+  return days;
+}
+
+function buildRangeCalendar(){
+  const from = document.getElementById('rangeFrom').value;
+  const to   = document.getElementById('rangeTo').value;
+  const wrap = document.getElementById('rangeCalendarWrap');
+  // holiday pills
+  const hl = document.getElementById('rangeHolidayList');
+  hl.innerHTML = Object.entries(rangeHolidays).sort().map(([ymd,label])=>
+    `<span style="display:inline-flex;align-items:center;gap:5px;background:#FFF3E0;border:1px solid #FFB74D;border-radius:14px;padding:2px 10px;font-size:.72rem;">
+      🎌 ${rangeFmtShort(ymd)} — ${label}
+      <button onclick="rangeRemoveHoliday('${ymd}')" style="border:none;background:none;cursor:pointer;color:#E65100;font-size:11px;padding:0;line-height:1;">✕</button>
+    </span>`).join('');
+
+  if(!from||!to||from>to){ wrap.innerHTML=''; return; }
+  const exSun = document.getElementById('excludeSunday').checked;
+  const exSat = document.getElementById('excludeSaturday').checked;
+  // build all dates in range
+  let cur = new Date(from+'T00:00:00');
+  const end = new Date(to+'T00:00:00');
+  const allDays=[];
+  while(cur<=end){ allDays.push(rangeToYMD(cur)); cur.setDate(cur.getDate()+1); }
+  const workingSet = new Set(rangeGetWorkingDays());
+  const totalDays = allDays.length;
+  const workingCount = workingSet.size;
+  const excluded = totalDays - workingCount;
+
+  let html = `<div style="margin-bottom:8px;font-size:.78rem;color:#555;">
+    <b>${workingCount} working day${workingCount!==1?'s':''}</b> selected across ${totalDays} calendar days
+    &nbsp;·&nbsp; <span style="color:var(--crimson);">${excluded} excluded</span>
+    (${exSun?'Sundays':''}${exSun&&exSat?', ':''}${exSat?'Saturdays':''}${(exSun||exSat)&&Object.keys(rangeHolidays).length?', ':''}${Object.keys(rangeHolidays).length?Object.keys(rangeHolidays).length+' holiday'+(Object.keys(rangeHolidays).length!==1?'s':''):''}${(!exSun&&!exSat&&!Object.keys(rangeHolidays).length)?'none':''})
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+  allDays.forEach(ymd=>{
+    const day = rangeDayName(ymd);
+    const isSun = new Date(ymd+'T00:00:00').getDay()===0;
+    const isSat = new Date(ymd+'T00:00:00').getDay()===6;
+    const isHol = !!rangeHolidays[ymd];
+    const excluded = !workingSet.has(ymd);
+    const bg = excluded ? '#f5f5f5' : '#E8F5E9';
+    const color = excluded ? '#bbb' : '#2E7D32';
+    const strike = excluded ? 'text-decoration:line-through;' : '';
+    const title = isHol ? rangeHolidays[ymd] : (isSun?'Sunday':(isSat?'Saturday':'Working Day'));
+    html+=`<div title="${title}" style="display:inline-flex;flex-direction:column;align-items:center;background:${bg};border-radius:6px;padding:4px 7px;min-width:38px;cursor:default;">
+      <span style="font-size:.58rem;color:#aaa;font-family:var(--font-mono);">${day}</span>
+      <span style="font-size:.72rem;font-weight:700;${strike}color:${color};">${ymd.slice(8)}</span>
+    </div>`;
+  });
+  html+='</div>';
+  wrap.innerHTML=html;
+  // also re-run parse if data exists
+  if(rangeData.length) renderRangeReport();
+  // update label
+  const lbl=document.getElementById('rangeDateRangeLabel');
+  if(lbl) lbl.textContent=from&&to?`🗓 ${rangeFmt(from)} → ${rangeFmt(to)}`:'';
+}
+
+function rangeParseTimestamp(ts){
+  if(!ts) return null;
+  // Try native parse first
+  const d = new Date(ts);
+  if(!isNaN(d)) return rangeToYMD(d);
+  // DD/MM/YYYY or DD-MM-YYYY
+  let m = ts.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return null;
+}
+
+function parseRangeData(){
+  const raw = document.getElementById('rangePasteBox').value.trim();
+  const statusEl = document.getElementById('rangeParseStatus');
+  if(!raw){ rangeData=[]; renderRangeReport(); statusEl.className='parse-status'; return; }
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lines.length<2){ statusEl.className='parse-status err'; statusEl.textContent='Need at least header + 1 data row.'; return; }
+  const ci = {
+    ts:   0,
+    name: getColIdx('col_name'),
+    desig:getColIdx('col_desig'),
+    zone: getColIdx('col_zone'),
+    ward: getColIdx('col_ward'),
+    insp: getColIdx('col_insp'),
+    photo:getColIdx('col_photo'),
+    rem:  getColIdx('col_rem'),
+  };
+  const headerRow = lines[0].toLowerCase();
+  const dataStart = (headerRow.includes('timestamp')||headerRow.includes('name')||headerRow.includes('officer')) ? 1 : 0;
+  const deptMap={};
+  REVIEW_MASTER.forEach(r=>{ deptMap[r[0]]=r[2]||'UNSPECIFIED'; });
+  rangeData=[];
+  for(let i=dataStart;i<lines.length;i++){
+    const cols=lines[i].split('\t');
+    if(cols.length<4) continue;
+    const ymd = rangeParseTimestamp((cols[ci.ts]||'').trim());
+    const name=(cols[ci.name]||'').trim().toUpperCase();
+    const desig=(cols[ci.desig]||'').trim().toUpperCase();
+    const zone=(cols[ci.zone]||'').trim().toUpperCase();
+    const insp=(cols[ci.insp]||'').trim();
+    const photoRaw=(cols[ci.photo]||'').trim();
+    const photos=photoRaw?photoRaw.split(/[\n,]+/).map(p=>p.trim()).filter(Boolean):[];
+    const rem=(cols[ci.rem]||'').trim();
+    if(!name||!insp) continue;
+    const dept=deptMap[name]||'UNSPECIFIED';
+    rangeData.push({ymd,name,desig,zone,insp,photos,rem,dept});
+  }
+  if(!rangeData.length){ statusEl.className='parse-status err'; statusEl.textContent='No valid rows found.'; return; }
+  const noDate=rangeData.filter(r=>!r.ymd).length;
+  statusEl.className='parse-status ok';
+  statusEl.textContent=`✔ ${rangeData.length} entries parsed${noDate?` (⚠ ${noDate} rows had unreadable timestamps — check Col 1)`:''}.`;
+  renderRangeReport();
+}
+
+function renderRangeReport(){
+  const statsEl=document.getElementById('rangeStatsStrip');
+  const tcard=document.getElementById('rangeTableCard');
+  const dcard=document.getElementById('rangeDefaulterCard');
+  if(!rangeData.length){
+    [statsEl,tcard,dcard].forEach(e=>{ if(e) e.style.display='none'; });
+    return;
+  }
+  const workingSet=new Set(rangeGetWorkingDays());
+  const filtered=rangeData.filter(r=>r.ymd&&workingSet.has(r.ymd));
+  // per officer
+  const byOfficer={};
+  filtered.forEach(r=>{
+    if(!byOfficer[r.name]) byOfficer[r.name]={desig:r.desig,zone:r.zone,dept:r.dept,days:new Set(),photos:[]};
+    if(r.ymd) byOfficer[r.name].days.add(r.ymd);
+    if(r.photos.length) byOfficer[r.name].photos.push(...r.photos);
+  });
+  const workDays=[...workingSet].sort();
+  const submittedNames=new Set(Object.keys(byOfficer));
+  const neverSubmitted=REVIEW_MASTER.filter(m=>!submittedNames.has(m[0]));
+
+  statsEl.style.display=''; tcard.style.display=''; dcard.style.display='';
+  document.getElementById('rng_workdays').textContent=workDays.length;
+  document.getElementById('rng_total').textContent=filtered.length;
+  document.getElementById('rng_submitted').textContent=submittedNames.size;
+  document.getElementById('rng_notsubmitted').textContent=neverSubmitted.length;
+
+  const lbl=document.getElementById('rangeDateRangeLabel');
+  const from=document.getElementById('rangeFrom').value;
+  const to=document.getElementById('rangeTo').value;
+  if(lbl&&from&&to) lbl.textContent=`🗓 ${rangeFmt(from)} → ${rangeFmt(to)}`;
+
+  rangePhotoState={};
+  const sorted=Object.entries(byOfficer).sort((a,b)=>b[1].days.size-a[1].days.size);
+  const tb=document.getElementById('rangeTableBody');
+  tb.innerHTML=sorted.map(([name,info],i)=>{
+    const submDays=[...info.days].sort();
+    const missingDays=workDays.filter(d=>!info.days.has(d));
+    const submHtml=submDays.map(d=>`<span style="display:inline-block;background:#E8F5E9;color:#2E7D32;border-radius:3px;padding:1px 6px;margin:1px;font-size:.68rem;">${rangeFmtShort(d)}</span>`).join('');
+    const missHtml=missingDays.map(d=>`<span style="display:inline-block;background:#FFF0F0;color:var(--crimson);border-radius:3px;padding:1px 6px;margin:1px;font-size:.68rem;">${rangeFmtShort(d)}</span>`).join('') || '<span style="color:#bbb;font-size:.68rem;">— All days covered</span>';
+    const rowId='rng'+i;
+    const uniquePhotos=[...new Set(info.photos)];
+    rangePhotoState[rowId]={photos:uniquePhotos,idx:0};
+    const photoHtml=rangePhotoCell(rowId,uniquePhotos);
+    return `<tr>
+      <td style="font-family:var(--font-mono);font-size:.72rem;color:#aaa;">${i+1}</td>
+      <td style="font-weight:600;">${name}</td>
+      <td style="font-size:.75rem;color:#555;">${info.desig}</td>
+      <td style="font-size:.72rem;color:#1565C0;">${info.dept}</td>
+      <td style="text-align:center;"><span class="count-pill">${info.days.size}</span></td>
+      <td style="text-align:center;"><span class="count-pill" style="background:#FFF0F0;color:var(--crimson);">${missingDays.length}</span></td>
+      <td>${submHtml}</td>
+      <td>${missHtml}</td>
+      <td>${photoHtml}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">No data for selected working days.</td></tr>';
+
+  document.getElementById('rangeDefCount').textContent=neverSubmitted.length+' officers';
+  const dtb=document.getElementById('rangeDefaulterTableBody');
+  dtb.innerHTML=neverSubmitted.map((d,i)=>`
+    <tr class="def-row">
+      <td style="font-family:var(--font-mono);font-size:.72rem;color:#aaa;">${i+1}</td>
+      <td style="font-weight:600;color:var(--crimson);">${d[0]}</td>
+      <td style="font-size:.77rem;color:#555;">${d[1]}</td>
+      <td style="font-size:.77rem;color:#1565C0;">${d[2]}</td>
+      <td><span class="def-badge">⚠ Zero Submission</span></td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--success);padding:12px;">✔ All officers submitted at least once in this date range</td></tr>';
+}
+
+function rangePhotoCell(rowId,photos){
+  if(!photos.length) return '<span style="color:#bbb;font-size:.72rem;">— No photo —</span>';
+  const previewUrl=toDrivePreviewUrl(photos[0]);
+  return `<div style="width:200px;">
+    <div style="position:relative;width:200px;height:155px;background:#f0f4f8;border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+      <img id="rngimg_${rowId}" src="${toDirectImageUrl(photos[0])}" style="max-width:100%;max-height:100%;object-fit:cover;display:block;" onerror="rangePhotoImgFail('${rowId}')"/>
+      <iframe id="rngframe_${rowId}" src="${previewUrl||''}" style="display:none;width:100%;height:100%;border:none;" allow="autoplay"></iframe>
+      <a id="rngfallback_${rowId}" href="${photos[0]}" target="_blank" rel="noopener" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:4px;text-decoration:none;color:#1565C0;font-size:.7rem;background:#E3F2FD;">📷<span>Open Photo</span></a>
+      ${photos.length>1?`
+      <button onclick="rangeSlidePhoto('${rowId}',-1)" style="position:absolute;left:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:white;cursor:pointer;font-size:16px;line-height:1;">‹</button>
+      <button onclick="rangeSlidePhoto('${rowId}',1)" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:white;cursor:pointer;font-size:16px;line-height:1;">›</button>`:''}
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:3px;">
+      <span id="rngcount_${rowId}" style="font-size:.7rem;color:#888;font-family:var(--font-mono);">1 / ${photos.length}</span>
+      <a id="rngopen_${rowId}" href="${photos[0]}" target="_blank" rel="noopener" style="font-size:.7rem;color:#1565C0;text-decoration:none;">Open ↗</a>
+    </div>
+  </div>`;
+}
+
+function rangePhotoImgFail(rowId){
+  const img=document.getElementById('rngimg_'+rowId);
+  const frame=document.getElementById('rngframe_'+rowId);
+  const fb=document.getElementById('rngfallback_'+rowId);
+  if(img) img.style.display='none';
+  if(frame&&frame.getAttribute('src')) frame.style.display='block';
+  else if(fb) fb.style.display='flex';
+}
+
+function rangeSlidePhoto(rowId,dir){
+  const st=rangePhotoState[rowId];
+  if(!st||!st.photos.length) return;
+  st.idx=(st.idx+dir+st.photos.length)%st.photos.length;
+  const url=st.photos[st.idx];
+  const img=document.getElementById('rngimg_'+rowId);
+  const frame=document.getElementById('rngframe_'+rowId);
+  const fb=document.getElementById('rngfallback_'+rowId);
+  const cnt=document.getElementById('rngcount_'+rowId);
+  const open=document.getElementById('rngopen_'+rowId);
+  if(img){ img.style.display='block'; img.src=toDirectImageUrl(url); }
+  if(frame){ frame.style.display='none'; frame.src=toDrivePreviewUrl(url)||''; }
+  if(fb){ fb.style.display='none'; fb.href=url; }
+  if(cnt) cnt.textContent=(st.idx+1)+' / '+st.photos.length;
+  if(open) open.href=url;
+}
+
+// Init range dates on load (add to window.onload via setMode init)
+(function initRange(){
+  const today=new Date();
+  const first=new Date(today.getFullYear(),today.getMonth(),1);
+  const last=new Date(today.getFullYear(),today.getMonth()+1,0);
+  window.addEventListener('DOMContentLoaded',function(){
+    const f=document.getElementById('rangeFrom');
+    const t=document.getElementById('rangeTo');
+    if(f) f.value=rangeToYMD(first);
+    if(t) t.value=rangeToYMD(last);
+  });
+})();
+
+
 </body>
 </html>
