@@ -186,6 +186,9 @@ body{font-family:var(--font-body);background:var(--mist);color:var(--ink);min-he
 
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:.8rem;}
+.tbl-wrap table{width:max-content;min-width:100%;}
+.tbl-wrap td,.tbl-wrap th{white-space:nowrap;}
+.tbl-wrap td.wrap-cell{white-space:normal;min-width:180px;max-width:320px;}
 th{
   background:var(--crimson);color:white;padding:8px 10px;
   font-family:var(--font-head);font-weight:600;letter-spacing:.5px;
@@ -1245,7 +1248,7 @@ function buildPreview(){
       <td style="font-size:.77rem;color:#666;">${info.desig}</td>
       <td>${zbadge}</td>
       <td style="text-align:center;"><span class="count-pill">${info.inspections.length}</span></td>
-      <td>${inspHtml}</td>
+      <td class="wrap-cell">${inspHtml}</td>
     </tr>`;
   }).join('');
 
@@ -1898,7 +1901,7 @@ function buildWeeklyPreview(){
       <td style="text-align:center;"><span class="count-pill">${info.count}</span></td>
       <td style="text-align:center;font-family:var(--font-mono);font-size:.78rem;font-weight:700;color:#1565C0;">${info.days.size}</td>
       <td style="text-align:center;font-family:var(--font-mono);font-size:.78rem;color:#555;">${avg}</td>
-      <td>${types}</td>
+      <td class="wrap-cell">${types}</td>
     </tr>`;
   }).join('');
 
@@ -2351,7 +2354,7 @@ function renderReviewTable(){
       <td style="font-size:.77rem;color:#666;">${info.desig}<br/><span style="font-size:.66rem;color:#1565C0;">${info.dept}</span></td>
       <td>${zbadge}</td>
       <td style="text-align:center;"><span class="count-pill">${info.inspections.length}</span></td>
-      <td>${inspHtml}</td>
+      <td class="wrap-cell">${inspHtml}</td>
       <td>${photoHtml}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">No staff found for the selected department(s).</td></tr>';
@@ -2619,7 +2622,7 @@ function buildRangePreview(){
       <td style="text-align:center;font-family:var(--font-mono);font-weight:700;color:#1565C0;">${info.days.size}</td>
       <td style="text-align:center;font-family:var(--font-mono);font-weight:700;color:${missCol};">${missed}</td>
       <td style="text-align:center;font-family:var(--font-mono);color:#555;">${avg}</td>
-      <td>${types}</td>
+      <td class="wrap-cell">${types}</td>
     </tr>`;
   }).join('');
 
