@@ -930,6 +930,7 @@ tr:hover td{background:#E3F2FD;}
 
 <script>
 const DEFAULT_MASTER = [
+  ["KOTTAI KUMAR","DEPUTY COMMISSIONER"],
   ["MAHESHWARI","DEPUTY COMMISSIONER"],
   ["SELVANAYAGAM","SUPERINTENDING ENGINEER"],
   ["RAM KUMAR","CITY HEALTH OFFICER"],
@@ -982,6 +983,7 @@ const DEFAULT_MASTER = [
 let masterList = JSON.parse(JSON.stringify(DEFAULT_MASTER));
 
 const REVIEW_MASTER = [
+  ["KOTTAI KUMAR","DEPUTY COMMISSIONER","GENERAL"],
   ["MAHESHWARI","DEPUTY COMMISSIONER","GENERAL"],
   ["SELVANAYAGAM","SUPERINTENDING ENGINEER","ENGINEERING"],
   ["RAM KUMAR","CITY HEALTH OFFICER","PUBLIC HEALTH"],
@@ -2364,7 +2366,7 @@ let rangeData = [];
 let rangeHolidays = {};
 let rngChartTrend = null;
 
-function rangeToYMD(d){ return d.toISOString().split('T')[0]; }
+function rangeToYMD(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function rangeFmt(ymd){ const d=new Date(ymd+'T00:00:00'); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
 function rangeFmtShort(ymd){ const d=new Date(ymd+'T00:00:00'); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}); }
 function rangeDayLabel(ymd){ const d=new Date(ymd+'T00:00:00'); return d.toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short'}); }
@@ -2474,7 +2476,7 @@ function parseRangeData(){
   if(!rangeData.length){ statusEl.className='parse-status err'; statusEl.textContent='No valid rows found.'; return; }
   const noDate=rangeData.filter(r=>!r.ymd).length;
   statusEl.className='parse-status ok';
-  statusEl.textContent=`✔ ${rangeData.length} entries parsed across ${new Set(rangeData.map(r=>r.ymd).filter(Boolean)).size} day(s) from ${new Set(rangeData.map(r=>r.name)).size} officers.${noDate?` ⚠ ${noDate} rows had unreadable timestamps.`:''}`;
+  statusEl.textContent=`✔ ${rangeData.length} total entries parsed from ${new Set(rangeData.map(r=>r.name)).size} officers across ${new Set(rangeData.map(r=>r.ymd).filter(Boolean)).size} day(s). Click Analyse → to filter to working days only.${noDate?` ⚠ ${noDate} rows had unreadable timestamps.`:''}`;
 }
 
 function resetRangeUI(){
@@ -2683,13 +2685,16 @@ async function generateRangePDF(){
     Object.entries(deptGrp).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([dept,{total,sub,entries}],i)=>{
       checkPage(8);
       const pct=total?Math.round(sub/total*100):0; const missed=total-sub;
-      const bg=i%2===0?[255,255,255]:[245,249,255]; doc.setFillColor(...bg); doc.rect(margin,y,W-margin*2,7,'F'); doc.setDrawColor(220,230,240); doc.line(margin,y+7,W-margin,y+7);
+      if(i%2===0) doc.setFillColor(255,255,255); else doc.setFillColor(245,249,255); doc.rect(margin,y,W-margin*2,7,'F'); doc.setDrawColor(220,230,240); doc.line(margin,y+7,W-margin,y+7);
       doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(26,26,46); doc.text(dept,deptX[0]+1,y+5);
       doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80); doc.text(String(total),deptX[1]+1,y+5);
-      doc.setTextColor(pct>=80?[46,125,50]:(pct>=50?[183,65,14]:[198,40,40])); doc.setFont('helvetica','bold'); doc.text(String(sub),deptX[2]+1,y+5);
+      if(pct>=80) doc.setTextColor(46,125,50); else if(pct>=50) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
+      doc.setFont('helvetica','bold'); doc.text(String(sub),deptX[2]+1,y+5);
       doc.setTextColor(198,40,40); doc.text(String(missed),deptX[3]+1,y+5);
       doc.setTextColor(21,101,192); doc.setFont('helvetica','normal'); doc.text(String(entries),deptX[4]+1,y+5);
-      doc.setFont('helvetica','bold'); doc.setTextColor(pct>=80?[46,125,50]:(pct>=50?[183,65,14]:[198,40,40])); doc.text(pct+'%',deptX[5]+1,y+5);
+      doc.setFont('helvetica','bold');
+      if(pct>=80) doc.setTextColor(46,125,50); else if(pct>=50) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
+      doc.text(pct+'%',deptX[5]+1,y+5);
       y+=7;
     });
     y+=5;
@@ -2703,12 +2708,14 @@ async function generateRangePDF(){
     sortedOff.forEach(([name,info],i)=>{
       if(y+7>H-16){ doc.addPage(); y=34; drawHeader(); drawOHdr(); }
       const missed=nDays-info.days.size; const pct=Math.round(info.days.size/nDays*100);
-      const bg=i%2===0?[255,255,255]:[245,249,255]; doc.setFillColor(...bg); doc.rect(margin,y,W-margin*2,7,'F'); doc.setDrawColor(220,230,240); doc.line(margin,y+7,W-margin,y+7);
+      if(i%2===0) doc.setFillColor(255,255,255); else doc.setFillColor(245,249,255); doc.rect(margin,y,W-margin*2,7,'F'); doc.setDrawColor(220,230,240); doc.line(margin,y+7,W-margin,y+7);
       doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(26,26,46); doc.text(name,ocx[0]+1,y+5);
       doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80); doc.text(info.desig.slice(0,16),ocx[1]+1,y+5); doc.text((info.dept||'').slice(0,14),ocx[2]+1,y+5); doc.text(info.zone.slice(0,12),ocx[3]+1,y+5);
       doc.setFillColor(21,101,192); doc.roundedRect(ocx[4],y+1.5,11,4,1,1,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(255,255,255); doc.text(String(info.count),ocx[4]+5.5,y+5,{align:'center'});
-      doc.setTextColor(pct>=80?[46,125,50]:pct>=50?[183,65,14]:[198,40,40]); doc.text(`${info.days.size}/${nDays}`,ocx[5]+1,y+5);
-      doc.setTextColor(missed===0?[46,125,50]:missed>=3?[198,40,40]:[183,65,14]); doc.text(String(missed),ocx[6]+1,y+5);
+      if(pct>=80) doc.setTextColor(46,125,50); else if(pct>=50) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
+      doc.text(`${info.days.size}/${nDays}`,ocx[5]+1,y+5);
+      if(missed===0) doc.setTextColor(46,125,50); else if(missed>=3) doc.setTextColor(198,40,40); else doc.setTextColor(183,65,14);
+      doc.text(String(missed),ocx[6]+1,y+5);
       doc.setTextColor(80,80,80); doc.setFont('helvetica','normal'); doc.text((info.count/nDays).toFixed(1),ocx[7]+1,y+5);
       y+=7;
     });
