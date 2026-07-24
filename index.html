@@ -867,7 +867,8 @@ tr:hover td{background:#E3F2FD;}
             <th style="text-align:center;">Submitted</th>
             <th style="text-align:center;">Not Submitted</th>
             <th style="text-align:center;">Total Entries</th>
-            <th style="text-align:center;">Compliance %</th>
+            <th style="text-align:center;">Officer Compliance<br/><span style="font-weight:400;font-size:.65rem;color:#aaa;">submitted ÷ total officers</span></th>
+            <th style="text-align:center;">Day Compliance<br/><span style="font-weight:400;font-size:.65rem;color:#aaa;">entries ÷ (officers × days)</span></th>
             <th>Performance</th>
           </tr></thead>
           <tbody id="rngDeptTableBody"></tbody>
@@ -2555,8 +2556,13 @@ function buildRangePreview(){
     const submOfficers=officers.filter(n=>byOfficer[n]);
     const notSub=officers.filter(n=>!byOfficer[n]);
     const deptEntries=filtered.filter(r=>r.dept===dept).length;
-    const pct=total?Math.round(submOfficers.length/total*100):0;
-    const barCol=pct>=80?'#4CAF50':pct>=50?'#FF9800':'#F44336';
+    // Officer compliance: how many officers submitted at least once
+    const offPct=total?Math.round(submOfficers.length/total*100):0;
+    // Day compliance: actual entries vs expected (each officer should submit once per working day)
+    const expected=total*nDays;
+    const dayPct=expected?Math.round(deptEntries/expected*100):0;
+    const offCol=offPct>=80?'#4CAF50':offPct>=50?'#FF9800':'#F44336';
+    const dayCol=dayPct>=80?'#4CAF50':dayPct>=50?'#FF9800':'#F44336';
     const bg=i%2===0?'':'background:#F8FBFF;';
     return `<tr style="${bg}">
       <td style="font-family:var(--font-mono);font-size:.7rem;color:#aaa;">${i+1}</td>
@@ -2564,9 +2570,25 @@ function buildRangePreview(){
       <td style="text-align:center;font-family:var(--font-mono);font-weight:700;">${total}</td>
       <td style="text-align:center;font-family:var(--font-mono);font-weight:700;color:#2E7D32;">${submOfficers.length}</td>
       <td style="text-align:center;font-family:var(--font-mono);font-weight:700;color:#C62828;">${notSub.length}</td>
-      <td style="text-align:center;"><span class="count-pill">${deptEntries}</span></td>
-      <td style="text-align:center;font-family:var(--font-mono);font-weight:700;color:${barCol};">${pct}%</td>
-      <td style="min-width:120px;"><div style="background:#f0f0f0;border-radius:4px;height:8px;"><div style="background:${barCol};border-radius:4px;height:8px;width:${pct}%;"></div></div></td>
+      <td style="text-align:center;"><span class="count-pill">${deptEntries}<span style="font-size:.65rem;color:#aaa;font-weight:400;"> / ${expected}</span></span></td>
+      <td style="text-align:center;">
+        <span style="font-family:var(--font-mono);font-weight:700;color:${offCol};font-size:.85rem;">${offPct}%</span><br/>
+        <span style="font-size:.65rem;color:#aaa;">${submOfficers.length}/${total} officers</span>
+      </td>
+      <td style="text-align:center;">
+        <span style="font-family:var(--font-mono);font-weight:700;color:${dayCol};font-size:.85rem;">${dayPct}%</span><br/>
+        <span style="font-size:.65rem;color:#aaa;">${deptEntries}/${expected} entries</span>
+      </td>
+      <td style="min-width:130px;">
+        <div style="margin-bottom:4px;">
+          <div style="font-size:.6rem;color:#888;margin-bottom:2px;">Officer</div>
+          <div style="background:#f0f0f0;border-radius:3px;height:6px;"><div style="background:${offCol};border-radius:3px;height:6px;width:${offPct}%;"></div></div>
+        </div>
+        <div>
+          <div style="font-size:.6rem;color:#888;margin-bottom:2px;">Day</div>
+          <div style="background:#f0f0f0;border-radius:3px;height:6px;"><div style="background:${dayCol};border-radius:3px;height:6px;width:${Math.min(dayPct,100)}%;"></div></div>
+        </div>
+      </td>
     </tr>`;
   }).join('');
 
@@ -2674,23 +2696,28 @@ async function generateRangePDF(){
     drawSecHead('2. DEPARTMENT-WISE ANALYSIS');
     const deptGrp={};
     REVIEW_MASTER.forEach(m=>{ if(!deptGrp[m[2]]) deptGrp[m[2]]={total:0,sub:0,entries:0}; deptGrp[m[2]].total++; if(byOff[m[0]]) deptGrp[m[2]].sub++; deptGrp[m[2]].entries+=byOff[m[0]]?.count||0; });
-    const deptHdrs=['Department','Total','Submitted','Not Sub','Entries','Rate%'];
-    const deptX=[margin,margin+42,margin+75,margin+100,margin+125,margin+152];
+    const deptHdrs=['Department','Total','Submitted','Not Sub','Entries / Expected','Officer %','Day %'];
+    const deptX=[margin,margin+40,margin+68,margin+90,margin+112,margin+148,margin+166];
     doc.setFillColor(21,101,192); doc.rect(margin,y,W-margin*2,7,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255);
     deptHdrs.forEach((h,i)=>doc.text(h,deptX[i]+1,y+5)); y+=8;
     Object.entries(deptGrp).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([dept,{total,sub,entries}],i)=>{
       checkPage(8);
-      const pct=total?Math.round(sub/total*100):0; const missed=total-sub;
+      const offPct=total?Math.round(sub/total*100):0;
+      const expected=total*nDays;
+      const dayPct=expected?Math.round(entries/expected*100):0;
+      const missed=total-sub;
       if(i%2===0) doc.setFillColor(255,255,255); else doc.setFillColor(245,249,255); doc.rect(margin,y,W-margin*2,7,'F'); doc.setDrawColor(220,230,240); doc.line(margin,y+7,W-margin,y+7);
       doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(26,26,46); doc.text(dept,deptX[0]+1,y+5);
       doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80); doc.text(String(total),deptX[1]+1,y+5);
-      if(pct>=80) doc.setTextColor(46,125,50); else if(pct>=50) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
+      if(offPct>=80) doc.setTextColor(46,125,50); else if(offPct>=50) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
       doc.setFont('helvetica','bold'); doc.text(String(sub),deptX[2]+1,y+5);
       doc.setTextColor(198,40,40); doc.text(String(missed),deptX[3]+1,y+5);
-      doc.setTextColor(21,101,192); doc.setFont('helvetica','normal'); doc.text(String(entries),deptX[4]+1,y+5);
+      doc.setTextColor(21,101,192); doc.setFont('helvetica','normal'); doc.text(`${entries} / ${expected}`,deptX[4]+1,y+5);
       doc.setFont('helvetica','bold');
-      if(pct>=80) doc.setTextColor(46,125,50); else if(pct>=50) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
-      doc.text(pct+'%',deptX[5]+1,y+5);
+      if(offPct>=80) doc.setTextColor(46,125,50); else if(offPct>=50) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
+      doc.text(offPct+'%',deptX[5]+1,y+5);
+      if(dayPct>=80) doc.setTextColor(46,125,50); else if(dayPct>=50) doc.setTextColor(183,65,14); else doc.setTextColor(198,40,40);
+      doc.text(dayPct+'%',deptX[6]+1,y+5);
       y+=7;
     });
     y+=5;
