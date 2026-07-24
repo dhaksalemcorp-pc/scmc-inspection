@@ -1245,7 +1245,7 @@ function buildPreview(){
     return `<tr>
       <td style="font-family:var(--font-mono);font-size:.72rem;color:#aaa;">${i+1}</td>
       <td style="font-weight:600;">${name}</td>
-      <td style="font-size:.77rem;color:#666;">${info.desig}</td>
+      <td style="font-size:.77rem;color:#666;" title="${info.desig}">${desigShort(info.desig)}</td>
       <td>${zbadge}</td>
       <td style="text-align:center;"><span class="count-pill">${info.inspections.length}</span></td>
       <td class="wrap-cell">${inspHtml}</td>
@@ -1265,19 +1265,32 @@ function buildPreview(){
 
 function zBadge(zone){
   const z=(zone||'').toUpperCase();
-  if(z.includes('HASTH')) return `<span class="zone-badge z-H">HASTHAMPATTI</span>`;
-  if(z.includes('SURAM')) return `<span class="zone-badge z-S">SURAMANGALAM</span>`;
-  if(z.includes('AMMAP')) return `<span class="zone-badge z-A">AMMAPET</span>`;
-  if(z.includes('KOND'))  return `<span class="zone-badge z-K">KONDALAMPATTI</span>`;
-  return `<span class="zone-badge" style="background:#eee;color:#555;">${zone}</span>`;
+  if(z.includes('SURAM')) return `<span class="zone-badge z-S" title="SURAMANGALAM">Zone-1</span>`;
+  if(z.includes('HASTH')) return `<span class="zone-badge z-H" title="HASTHAMPATTI">Zone-2</span>`;
+  if(z.includes('AMMAP')) return `<span class="zone-badge z-A" title="AMMAPET">Zone-3</span>`;
+  if(z.includes('KOND'))  return `<span class="zone-badge z-K" title="KONDALAMPATTI">Zone-4</span>`;
+  return `<span class="zone-badge" style="background:#eee;color:#555;" title="${zone}">${zone}</span>`;
 }
 function zoneShort(zone){
   const z=(zone||'').toUpperCase();
-  if(z.includes('HASTH')) return 'HASTHAMPATTI';
-  if(z.includes('SURAM')) return 'SURAMANGALAM';
-  if(z.includes('AMMAP')) return 'AMMAPET';
-  if(z.includes('KOND'))  return 'KONDALAMPATTI';
+  if(z.includes('SURAM')) return 'Zone-1';
+  if(z.includes('HASTH')) return 'Zone-2';
+  if(z.includes('AMMAP')) return 'Zone-3';
+  if(z.includes('KOND'))  return 'Zone-4';
   return zone||'—';
+}
+function desigShort(desig){
+  const d=(desig||'').toUpperCase();
+  if(d.includes('SUPERINTENDING')) return 'SE';
+  if(d.includes('ASSISTANT EXECUTIVE')) return 'AEE';
+  if(d.includes('EXECUTIVE ENGINEER')) return 'EE';
+  if(d.includes('ASSISTANT ENGINEER')) return 'AE';
+  if(d.includes('JUNIOR ENGINEER')) return 'JE';
+  if(d.includes('SANITARY')) return 'SI';
+  if(d.includes('DEPUTY COMMISSIONER')) return 'DC';
+  if(d.includes('CITY HEALTH')) return 'CHO';
+  if(d.includes('ASSISTANT COMMISSIONER')) return 'AC';
+  return desig;
 }
 
 let currentChart = 0;
@@ -1896,7 +1909,7 @@ function buildWeeklyPreview(){
     return `<tr style="${bg}">
       <td style="font-family:var(--font-mono);font-size:.7rem;color:#aaa;">${i+1}</td>
       <td style="font-weight:600;font-size:.78rem;">${name}</td>
-      <td style="font-size:.72rem;color:#666;">${info.desig}</td>
+      <td style="font-size:.72rem;color:#666;" title="${info.desig}">${desigShort(info.desig)}</td>
       <td>${zBadge(info.zone)}</td>
       <td style="text-align:center;"><span class="count-pill">${info.count}</span></td>
       <td style="text-align:center;font-family:var(--font-mono);font-size:.78rem;font-weight:700;color:#1565C0;">${info.days.size}</td>
@@ -2067,7 +2080,7 @@ async function generateWeeklyPDF(){
       doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(26,26,46);
       doc.text(name,ocx[0]+1,y+5);
       doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
-      doc.text(info.desig.slice(0,18),ocx[1]+1,y+5);
+      doc.text(desigShort(info.desig),ocx[1]+1,y+5);
       doc.text(zoneShort(info.zone),ocx[2]+1,y+5);
       doc.setFillColor(21,101,192); doc.roundedRect(ocx[3],y+1.5,13,4,1,1,'F');
       doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(255,255,255);
@@ -2351,7 +2364,7 @@ function renderReviewTable(){
     return `<tr>
       <td style="font-family:var(--font-mono);font-size:.72rem;color:#aaa;">${i+1}</td>
       <td style="font-weight:600;">${name}</td>
-      <td style="font-size:.77rem;color:#666;">${info.desig}<br/><span style="font-size:.66rem;color:#1565C0;">${info.dept}</span></td>
+      <td style="font-size:.77rem;color:#666;">${desigShort(info.desig)}<br/><span style="font-size:.66rem;color:#1565C0;">${info.dept}</span></td>
       <td>${zbadge}</td>
       <td style="text-align:center;"><span class="count-pill">${info.inspections.length}</span></td>
       <td class="wrap-cell">${inspHtml}</td>
@@ -2615,7 +2628,7 @@ function buildRangePreview(){
     return `<tr style="${bg}">
       <td style="font-family:var(--font-mono);font-size:.7rem;color:#aaa;">${i+1}</td>
       <td style="font-weight:600;font-size:.78rem;">${name}</td>
-      <td style="font-size:.72rem;color:#666;">${info.desig}</td>
+      <td style="font-size:.72rem;color:#666;" title="${info.desig}">${desigShort(info.desig)}</td>
       <td style="font-size:.7rem;color:#1565C0;">${info.dept}</td>
       <td>${zBadge(info.zone)}</td>
       <td style="text-align:center;"><span class="count-pill">${info.count}</span></td>
@@ -2811,7 +2824,7 @@ async function generateRangePDF(){
         doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(40,40,40);
         doc.text('  '+o.name, margin+4, y+4.3);
         doc.setTextColor(100,100,100);
-        doc.text(o.desig, margin+60, y+4.3);
+        doc.text(desigShort(o.desig), margin+60, y+4.3);
         doc.setFont('helvetica','bold'); doc.setTextColor(...oCol);
         doc.text(`${o.days}/${nDays} days`, margin+130, y+4.3);
         doc.text(`(${opct}%)`, margin+152, y+4.3);
@@ -2841,7 +2854,7 @@ async function generateRangePDF(){
       doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(26,26,46);
       doc.text(name,ocx[0]+1,y+5);
       doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
-      doc.text(info.desig.slice(0,16),ocx[1]+1,y+5);
+      doc.text(desigShort(info.desig),ocx[1]+1,y+5);
       doc.text((info.dept||'').slice(0,13),ocx[2]+1,y+5);
       doc.text(zoneShort(info.zone),ocx[3]+1,y+5);
       doc.setFillColor(21,101,192); doc.roundedRect(ocx[4],y+1.5,13,4,1,1,'F');
