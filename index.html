@@ -1268,6 +1268,14 @@ function zBadge(zone){
   if(z.includes('KOND'))  return `<span class="zone-badge z-K">KONDALAMPATTI</span>`;
   return `<span class="zone-badge" style="background:#eee;color:#555;">${zone}</span>`;
 }
+function zoneShort(zone){
+  const z=(zone||'').toUpperCase();
+  if(z.includes('HASTH')) return 'HASTHAMPATTI';
+  if(z.includes('SURAM')) return 'SURAMANGALAM';
+  if(z.includes('AMMAP')) return 'AMMAPET';
+  if(z.includes('KOND'))  return 'KONDALAMPATTI';
+  return zone||'—';
+}
 
 let currentChart = 0;
 const chartNames = ['Officer-wise Count (Top 10)','Zone Distribution','Staff Coverage'];
@@ -2039,7 +2047,7 @@ async function generateWeeklyPDF(){
     // Officer table
     drawSecHead('3. OFFICER-WISE WEEKLY SUMMARY');
     const ohdr=['Name','Desig','Zone','Total','Days','Avg'];
-    const ocx=[margin,margin+34,margin+74,margin+104,margin+116,margin+130];
+    const ocx=[margin,margin+34,margin+74,margin+114,margin+126,margin+140];
 
     function drawWOfficerTableHeader(){
       doc.setFillColor(21,101,192); doc.rect(margin,y,W-margin*2,7,'F');
@@ -2057,7 +2065,7 @@ async function generateWeeklyPDF(){
       doc.text(name,ocx[0]+1,y+5);
       doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
       doc.text(info.desig.slice(0,18),ocx[1]+1,y+5);
-      doc.text(info.zone.slice(0,14),ocx[2]+1,y+5);
+      doc.text(zoneShort(info.zone),ocx[2]+1,y+5);
       doc.setFillColor(21,101,192); doc.roundedRect(ocx[3],y+1.5,13,4,1,1,'F');
       doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(255,255,255);
       doc.text(String(info.count),ocx[3]+6.5,y+5,{align:'center'});
@@ -2813,7 +2821,7 @@ async function generateRangePDF(){
     // 4. Officer table
     drawSecHead('4. OFFICER-WISE ANALYSIS');
     const ohdr=['Name','Desig','Dept','Zone','Total','Days','Avg'];
-    const ocx=[margin,margin+34,margin+72,margin+106,margin+124,margin+136,margin+152];
+    const ocx=[margin,margin+34,margin+72,margin+110,margin+128,margin+141,margin+157];
 
     function drawOHdr(){
       doc.setFillColor(21,101,192); doc.rect(margin,y,W-margin*2,7,'F');
@@ -2832,7 +2840,7 @@ async function generateRangePDF(){
       doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
       doc.text(info.desig.slice(0,16),ocx[1]+1,y+5);
       doc.text((info.dept||'').slice(0,13),ocx[2]+1,y+5);
-      doc.text(info.zone.slice(0,12),ocx[3]+1,y+5);
+      doc.text(zoneShort(info.zone),ocx[3]+1,y+5);
       doc.setFillColor(21,101,192); doc.roundedRect(ocx[4],y+1.5,13,4,1,1,'F');
       doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(255,255,255);
       doc.text(String(info.count),ocx[4]+6.5,y+5,{align:'center'});
