@@ -933,7 +933,6 @@ tr:hover td{background:#E3F2FD;}
 const DEFAULT_MASTER = [
   ["MAHESHWARI","DEPUTY COMMISSIONER"],
   ["SELVANAYAGAM","SUPERINTENDING ENGINEER"],
-  ["RAM KUMAR","CITY HEALTH OFFICER"],
   ["EGARAJ","ASSISTANT COMMISSIONER"],
   ["SUBRAMANIYAN","ASSISTANT COMMISSIONER"],
   ["AMSAVENI","ASSISTANT COMMISSIONER"],
@@ -984,7 +983,6 @@ let masterList = JSON.parse(JSON.stringify(DEFAULT_MASTER));
 const REVIEW_MASTER = [
   ["MAHESHWARI","DEPUTY COMMISSIONER","GENERAL"],
   ["SELVANAYAGAM","SUPERINTENDING ENGINEER","ENGINEERING"],
-  ["RAM KUMAR","CITY HEALTH OFFICER","PUBLIC HEALTH"],
   ["EGARAJ","ASSISTANT COMMISSIONER","GENERAL"],
   ["SUBRAMANIYAN","ASSISTANT COMMISSIONER","GENERAL"],
   ["AMSAVENI","ASSISTANT COMMISSIONER","GENERAL"],
@@ -2197,12 +2195,14 @@ function renderReviewDeptFilter(){
   const card = document.getElementById('reviewDeptCard');
   if(!reviewData.length){ card.style.display='none'; return; }
   card.style.display='';
-  const allDepts = [...new Set(REVIEW_MASTER.map(r=>r[2]))].sort();
+  const activeNamesR=new Set(masterList.map(m=>m[0]));
+  const activeMaster=REVIEW_MASTER.filter(m=>activeNamesR.has(m[0]));
+  const allDepts = [...new Set(activeMaster.map(r=>r[2]))].sort();
   const grid = document.getElementById('reviewDeptGrid');
   grid.innerHTML = allDepts.map(d=>{
     const id = 'rvdept_'+d.replace(/[^A-Z0-9]/g,'_');
     const checked = reviewSelectedDepts.has(d) ? 'checked' : '';
-    const staffCount = REVIEW_MASTER.filter(r=>r[2]===d).length;
+    const staffCount = activeMaster.filter(r=>r[2]===d).length;
     const entryCount = reviewData.filter(r=>r.dept===d).length;
     return `<label class="master-row" style="cursor:pointer;">
       <input type="checkbox" id="${id}" data-dept="${d}" ${checked} onchange="reviewToggleDept('${d.replace(/'/g,"\\'")}')" style="margin-right:8px;width:16px;height:16px;"/>
@@ -2221,7 +2221,8 @@ function reviewToggleDept(d){
 }
 
 function reviewSelectAllDept(selectAll){
-  const allDepts = [...new Set(REVIEW_MASTER.map(r=>r[2]))];
+  const activeN=new Set(masterList.map(m=>m[0]));
+  const allDepts = [...new Set(REVIEW_MASTER.filter(m=>activeN.has(m[0])).map(r=>r[2]))];
   reviewSelectedDepts = selectAll ? new Set(allDepts) : new Set();
   renderReviewDeptFilter();
   renderReviewTable();
@@ -2314,7 +2315,8 @@ function renderReviewTable(){
   });
 
   const submittedNames = new Set(Object.keys(byOfficer));
-  const masterInSelected = REVIEW_MASTER.filter(m=>reviewSelectedDepts.has(m[2]));
+  const activeNamesRV=new Set(masterList.map(m=>m[0]));
+  const masterInSelected = REVIEW_MASTER.filter(m=>activeNamesRV.has(m[0])&&reviewSelectedDepts.has(m[2]));
   const notSubmitted = masterInSelected.filter(m=>!submittedNames.has(m[0]));
   const photoTotal = filtered.reduce((acc,r)=>acc+(r.photos?r.photos.length:0),0);
 
@@ -2550,8 +2552,9 @@ function buildRangePreview(){
 
   // Department-wise analysis
   document.getElementById('rngDeptCard').style.display='';
+  const activeNames=new Set(masterList.map(m=>m[0]));
   const deptGroups={};
-  REVIEW_MASTER.forEach(m=>{ if(!deptGroups[m[2]]) deptGroups[m[2]]={total:0,officers:[]}; deptGroups[m[2]].total++; deptGroups[m[2]].officers.push({name:m[0],desig:m[1]}); });
+  REVIEW_MASTER.filter(m=>activeNames.has(m[0])).forEach(m=>{ if(!deptGroups[m[2]]) deptGroups[m[2]]={total:0,officers:[]}; deptGroups[m[2]].total++; deptGroups[m[2]].officers.push({name:m[0],desig:m[1]}); });
   document.getElementById('rngDeptTableBody').innerHTML=Object.entries(deptGroups).sort((a,b)=>a[0].localeCompare(b[0])).map(([dept,{total,officers}],i)=>{
     // For each officer in this dept, count how many working days they submitted
     const officerStats=officers.map(o=>{
@@ -2755,8 +2758,9 @@ async function generateRangePDF(){
 
     // 3. Department-wise analysis
     drawSecHead('3. DEPARTMENT-WISE ANALYSIS');
+    const activeNamesP=new Set(masterList.map(m=>m[0]));
     const deptGrp={};
-    REVIEW_MASTER.forEach(m=>{
+    REVIEW_MASTER.filter(m=>activeNamesP.has(m[0])).forEach(m=>{
       if(!deptGrp[m[2]]) deptGrp[m[2]]={total:0,officers:[]};
       deptGrp[m[2]].total++; deptGrp[m[2]].officers.push({name:m[0],desig:m[1]});
     });
