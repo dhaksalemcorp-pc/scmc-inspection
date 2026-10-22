@@ -276,6 +276,26 @@ tr:hover td{background:#E3F2FD;}
   animation:spin .7s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg);}}
+
+/* Roster (officer master list) */
+.roster-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.roster-summary{font-size:.76rem;color:#666;margin-bottom:8px;}
+.master-row{cursor:pointer;user-select:none;transition:background .15s,opacity .15s;}
+.master-row:hover{border-color:#90CAF9;}
+.master-row input[type=checkbox]{width:16px;height:16px;accent-color:#1565C0;flex-shrink:0;cursor:pointer;}
+.master-row.inactive{opacity:.55;background:#FAFAFA;}
+.master-row.inactive .master-name{text-decoration:line-through;color:#888;}
+.master-info{flex:1;min-width:0;display:flex;flex-direction:column;}
+.master-info .master-name,.master-info .master-desig{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.btn-xs{padding:5px 12px;font-size:.75rem;}
+.save-note{font-size:.72rem;color:var(--success);margin-left:auto;}
+.save-note.warn{color:var(--warn);}
+/* Date chips (auto-detected report dates) */
+.date-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.date-chip{border:1.5px solid #BBDEFB;background:white;color:#1565C0;border-radius:14px;padding:3px 10px;font-size:.74rem;cursor:pointer;font-family:var(--font-body);}
+.date-chip:hover{background:#E3F2FD;}
+.date-chip.active{background:#1565C0;color:white;border-color:#1565C0;}
+.date-chip b{font-family:var(--font-mono);font-weight:600;margin-left:5px;}
 </style>
 </head>
 <body>
@@ -343,14 +363,8 @@ tr:hover td{background:#E3F2FD;}
       <span style="margin-left:auto;font-size:.75rem;color:#888;" id="masterCount">0 officers</span>
     </div>
     <div class="card-body">
-      <p class="paste-hint" style="margin-bottom:12px;">This list is used to identify officers who did <b>not</b> submit inspections. Pre-loaded with standard roster — edit as needed.</p>
-      <div class="master-grid" id="masterGrid"></div>
-      <div class="add-officer-row" style="margin-top:14px;">
-        <input class="input-sm" id="newName" placeholder="Officer Name" style="min-width:180px;"/>
-        <input class="input-sm" id="newDesig" placeholder="Designation" style="min-width:180px;"/>
-        <button class="btn btn-outline" onclick="addOfficer()">+ Add Officer</button>
-        <button class="btn btn-outline" onclick="clearMaster()" style="margin-left:auto;color:#999;border-color:#ccc;">Clear All</button>
-      </div>
+      <p class="paste-hint" style="margin-bottom:12px;">Tick the officers who must submit inspections. Unticked officers stay in the list but are <b>not</b> counted in "Not Submitted". Names must match how officers type them in the Google Form. All changes are saved automatically in this browser.</p>
+      <div id="rosterMount"></div>
     </div>
   </div>
 
@@ -395,13 +409,14 @@ tr:hover td{background:#E3F2FD;}
     <div class="card-body">
       <div class="date-row">
         <label>Report Date:</label>
-        <input type="date" class="date-input" id="reportDate" onchange="updateHeaderDate()"/>
-        <span style="font-size:.75rem;color:#aaa;">← Set before generating</span>
+        <input type="date" class="date-input" id="reportDate" onchange="updateHeaderDate();parseData()"/>
+        <span style="font-size:.75rem;color:#aaa;">← Auto-detected from pasted data (latest reported date). Change it or click a date below to report another day.</span>
       </div>
       <div class="section-label">Step 1 — Open your Google Sheet (Form Responses), select all data including header row, Copy (Ctrl+C), then paste below:</div>
       <textarea class="paste-area" id="pasteBox" placeholder="Paste Google Sheet data here...&#10;&#10;Expected columns (in order):&#10;Timestamp | NAME OF THE OFFICER | DESIGNATION | ZONE NAME | WARD NO | INSPECTION &amp; SITE VISIT | PHOTO/FILE UPLOAD | REMARKS&#10;&#10;Just copy the entire sheet and paste — headers included." onpaste="setTimeout(parseData,100)" oninput="parseData()"></textarea>
       <div class="paste-hint">Tip: Select all rows in Google Sheet (Ctrl+A), copy (Ctrl+C), paste here. The header row is auto-detected and skipped.</div>
       <div class="parse-status" id="parseStatus"></div>
+      <div class="date-chips" id="dailyDateChips"></div>
       <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-outline" onclick="switchTab('setup')" style="color:#888;border-color:#ccc;">← Back to Setup</button>
         <button class="btn btn-primary" onclick="parseData();switchTab('preview')">Parse & Preview →</button>
@@ -426,6 +441,7 @@ tr:hover td{background:#E3F2FD;}
         <div><div class="section-label">Inspection</div><input type="number" class="input-sm" id="col_insp" value="5" style="width:60px;"/></div>
         <div><div class="section-label">Photo/File Upload</div><input type="number" class="input-sm" id="col_photo" value="6" style="width:60px;"/></div>
         <div><div class="section-label">Remarks</div><input type="number" class="input-sm" id="col_rem" value="7" style="width:60px;"/></div>
+        <div><div class="section-label">Timestamp Date Format</div><select class="input-sm" id="col_dateorder" style="width:auto;" onchange="lastDailyRaw='';parseData();"><option value="AUTO">Auto-detect</option><option value="DMY">DD/MM/YYYY</option><option value="MDY">MM/DD/YYYY</option></select></div>
       </div>
     </div>
   </div>
@@ -544,14 +560,8 @@ tr:hover td{background:#E3F2FD;}
       <span style="margin-left:auto;font-size:.75rem;color:#888;" id="wMasterCount">0 officers</span>
     </div>
     <div class="card-body">
-      <p class="paste-hint" style="margin-bottom:12px;">Officers listed here are used to identify those who have not submitted reports in the weekly summary. Changes sync with the Setup tab roster.</p>
-      <div class="master-grid" id="wMasterGrid"></div>
-      <div class="add-officer-row" style="margin-top:14px;">
-        <input class="input-sm" id="wNewName" placeholder="Officer Name" style="min-width:180px;"/>
-        <input class="input-sm" id="wNewDesig" placeholder="Designation" style="min-width:180px;"/>
-        <button class="btn btn-outline" onclick="wAddOfficer()">+ Add Officer</button>
-        <button class="btn btn-outline" onclick="wClearMaster()" style="margin-left:auto;color:#999;border-color:#ccc;">Clear All</button>
-      </div>
+      <p class="paste-hint" style="margin-bottom:12px;">Same list as the Setup tab — any change here is reflected everywhere and saved automatically.</p>
+      <div id="wRosterMount"></div>
     </div>
   </div>
 
@@ -564,11 +574,12 @@ tr:hover td{background:#E3F2FD;}
       <div class="date-row" style="flex-wrap:wrap;gap:16px;">
         <div style="display:flex;align-items:center;gap:8px;">
           <label style="font-size:.82rem;font-weight:600;color:var(--slate);">Week From:</label>
-          <input type="date" class="date-input" id="weekFrom"/>
+          <input type="date" class="date-input" id="weekFrom" onchange="parseWeeklyData()"/>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <label style="font-size:.82rem;font-weight:600;color:var(--slate);">Week To:</label>
-          <input type="date" class="date-input" id="weekTo"/>
+          <input type="date" class="date-input" id="weekTo" onchange="parseWeeklyData()"/>
+        <span style="font-size:.75rem;color:#aaa;">← Auto-set to the latest 7 days found in pasted data</span>
         </div>
       </div>
       <div class="section-label" style="margin-top:14px;">Paste all 7 days of Google Form response data below (include header row — same format as daily):</div>
@@ -681,8 +692,8 @@ tr:hover td{background:#E3F2FD;}
     <div class="card-body">
       <div class="date-row">
         <label>Review Date:</label>
-        <input type="date" class="date-input" id="reviewDate" onchange="updateReviewDate()"/>
-        <span style="font-size:.75rem;color:#aaa;">← Set the date this review covers</span>
+        <input type="date" class="date-input" id="reviewDate" onchange="updateReviewDate();parseReviewData()"/>
+        <span style="font-size:.75rem;color:#aaa;">← Auto-detected from pasted data (latest reported date)</span>
       </div>
       <div class="section-label">Paste Google Form response data below (same format — header row included). After pasting, select department(s)/designation(s) below to filter the staff shown.</div>
       <textarea class="paste-area" id="reviewPasteBox" style="min-height:160px;"
@@ -690,9 +701,10 @@ tr:hover td{background:#E3F2FD;}
         onpaste="setTimeout(parseReviewData,100)" oninput="parseReviewData()"></textarea>
       <div class="paste-hint">Tip: Select all rows in Google Sheet (Ctrl+A), copy (Ctrl+C), paste here.</div>
       <div class="parse-status" id="reviewParseStatus"></div>
+      <div class="date-chips" id="reviewDateChips"></div>
       <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-primary" onclick="parseReviewData()">Parse Data →</button>
-        <button class="btn btn-outline" onclick="document.getElementById('reviewPasteBox').value='';reviewData=[];document.getElementById('reviewParseStatus').className='parse-status';renderReviewDeptFilter();renderReviewTable();">Clear</button>
+        <button class="btn btn-outline" onclick="document.getElementById('reviewPasteBox').value='';parseReviewData();">Clear</button>
       </div>
     </div>
   </div>
@@ -933,63 +945,7 @@ tr:hover td{background:#E3F2FD;}
 </div><!-- /app-body -->
 
 <script>
-const DEFAULT_MASTER = [
-  ["MAHESHWARI","DEPUTY COMMISSIONER"],
-  ["SELVANAYAGAM","SUPERINTENDING ENGINEER"],
-  ["GNANAVEL","EXECUTIVE ENGINEER"],
-  ["GOMATHI","EXECUTIVE ENGINEER"],
-  ["MADHAVASANKAR","EXECUTIVE ENGINEER"],
-  ["RAJA","EXECUTIVE ENGINEER"],
-  ["SEKAR","EXECUTIVE ENGINEER"],
-  ["RAM KUMAR","CITY HEALTH OFFICER"],
-  ["EGARAJ","ASSISTANT COMMISSIONER"],
-  ["SUBRAMANIYAN","ASSISTANT COMMISSIONER"],
-  ["AMSAVENI","ASSISTANT COMMISSIONER"],
-  ["KUMARESAN","ASSISTANT COMMISSIONER"],
-  ["THANGAMANI","ASSISTANT EXECUTIVE ENGINEER"],
-  ["OBULI SUNDAR","ASSISTANT EXECUTIVE ENGINEER"],
-  ["SENTHIL KUMAR","ASSISTANT EXECUTIVE ENGINEER"],
-  ["SUMATHI","ASSISTANT EXECUTIVE ENGINEER"],
-  ["DIVYA","ASSISTANT ENGINEER"],
-  ["SASEDHARAN","ASSISTANT ENGINEER"],
-  ["EZHILARASI","ASSISTANT ENGINEER"],
-  ["IMAYAVARAMBAN","ASSISTANT ENGINEER"],
-  ["KAVIYARAJ","ASSISTANT ENGINEER"],
-  ["SIVAKUMAR","ASSISTANT ENGINEER"],
-  ["NAVANEDHAN","JUNIOR ENGINEER"],
-  ["RISHINADHAN","ASSISTANT ENGINEER"],
-  ["MURUGAVEL","ASSISTANT ENGINEER"],
-  ["BALASUBRAMANIYAM","ASSISTANT ENGINEER"],
-  ["ANBUSELVI","ASSISTANT ENGINEER"],
-  ["ELANKAVI","JUNIOR ENGINEER"],
-  ["SRINIVASAN","ASSISTANT ENGINEER"],
-  ["SUBASH SUNDAR","ASSISTANT ENGINEER"],
-  ["MALAR","ASSISTANT ENGINEER"],
-  ["BALASUBRAMANI","JUNIOR ENGINEER"],
-  ["CHANDRASEKARAN","ASSISTANT ENGINEER"],
-  ["R.PRAKASH","JUNIOR ENGINEER"],
-  ["SENTHAMARAI","ASSISTANT ENGINEER"],
-  ["DINESH RAJ","ASSISTANT ENGINEER"],
-  ["SIVANAGNAMOORTHY","SANITARY INSPECTOR"],
-  ["UMAMAHESWARI","SANITARY INSPECTOR"],
-  ["SARAVANAN","SANITARY INSPECTOR"],
-  ["KESAVARAJ","SANITARY INSPECTOR"],
-  ["PUNITHARASU","SANITARY INSPECTOR"],
-  ["MANIDURGADEVI","SANITARY INSPECTOR"],
-  ["SIDDESWARAN","SANITARY INSPECTOR"],
-  ["S.GOPINATH","SANITARY INSPECTOR"],
-  ["RITHISHKUMAR","SANITARY INSPECTOR"],
-  ["ITHIKASAN","SANITARY INSPECTOR"],
-  ["SATHISHKUMAR","SANITARY INSPECTOR"],
-  ["INIYA","SANITARY INSPECTOR"],
-  ["NIRMALKUMAR","SANITARY INSPECTOR"],
-  ["VIMALA","SANITARY INSPECTOR"],
-  ["K.PRAKASH","SANITARY INSPECTOR"],
-];
-
-let masterList = JSON.parse(JSON.stringify(DEFAULT_MASTER));
-
-const REVIEW_MASTER = [
+const DEFAULT_ROSTER = [
   ["MAHESHWARI","DEPUTY COMMISSIONER","GENERAL"],
   ["SELVANAYAGAM","SUPERINTENDING ENGINEER","ENGINEERING"],
   ["GNANAVEL","EXECUTIVE ENGINEER","ENGINEERING"],
@@ -1042,12 +998,23 @@ const REVIEW_MASTER = [
   ["VIMALA","SANITARY INSPECTOR","PUBLIC HEALTH"],
   ["K.PRAKASH","SANITARY INSPECTOR","PUBLIC HEALTH"],
 ];
+
+/* ── Officer roster: saved permanently in this browser (localStorage) ── */
+const ROSTER_KEY = 'scmc_inspection_roster_v1';
+let masterList = [];      // ticked (tracked) officers only: [name, desig, dept]
+let REVIEW_MASTER = [];   // every officer with department: [name, desig, dept]
+let rosterSaveOk = true;
+const rosterUI = { '':{q:'',dept:'ALL'}, 'w':{q:'',dept:'ALL'} };
+let roster = loadRoster() || defaultRoster();
+syncRoster(false);
+
 let parsedData = [];
 let chartBar=null, chartPie=null, chartDonut=null;
 let currentMode = 'daily';
 const LOGO_B64 = (function(){ const img = document.querySelector('.logo-wrap img'); return img ? img.src : ''; })();
 
 window.onload = function(){
+  initRosterWidgets();
   renderMaster();
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
@@ -1122,53 +1089,218 @@ function switchTab(name){
   if(name==='preview') buildPreview();
 }
 
+function defaultRoster(){ return DEFAULT_ROSTER.map(r=>({name:r[0],desig:r[1],dept:r[2]||'UNSPECIFIED',active:true})); }
+function cleanOfficer(o){
+  return { name:String(o.name||'').trim().toUpperCase(), desig:String(o.desig||'').trim().toUpperCase(),
+           dept:(String(o.dept||'').trim().toUpperCase()||'UNSPECIFIED'), active:o.active!==false };
+}
+function loadRoster(){
+  try{
+    const raw = localStorage.getItem(ROSTER_KEY); if(!raw) return null;
+    const arr = JSON.parse(raw); if(!Array.isArray(arr)) return null;
+    const out = arr.map(cleanOfficer).filter(o=>o.name);
+    return out.length ? out : null;
+  }catch(e){ return null; }
+}
+function syncRoster(save){
+  masterList    = roster.filter(o=>o.active).map(o=>[o.name,o.desig,o.dept]);
+  REVIEW_MASTER = roster.map(o=>[o.name,o.desig,o.dept]);
+  if(save!==false){
+    try{ localStorage.setItem(ROSTER_KEY, JSON.stringify(roster)); rosterSaveOk=true; }
+    catch(e){ rosterSaveOk=false; }
+  }
+}
+function escHtml(v){ return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function rosterWidgetHTML(p){
+  return `
+  <div class="roster-toolbar">
+    <input class="input-sm" id="${p}rosterSearch" placeholder="🔍 Search name, designation or department" style="min-width:220px;" oninput="rosterUI['${p}'].q=this.value;renderRosterList('${p}')"/>
+    <select class="input-sm" id="${p}rosterDept" style="flex:0 0 auto;min-width:190px;" onchange="rosterUI['${p}'].dept=this.value;renderRosterList('${p}')"></select>
+    <button class="btn btn-outline btn-xs" onclick="rosterBulk('${p}',true)">☑ Select shown</button>
+    <button class="btn btn-outline btn-xs" onclick="rosterBulk('${p}',false)">☐ Deselect shown</button>
+  </div>
+  <div class="roster-summary" id="${p}rosterSummary"></div>
+  <div class="master-grid" id="${p}rosterGrid"></div>
+  <div class="add-officer-row" style="margin-top:14px;">
+    <input class="input-sm" id="${p}newName" placeholder="Officer Name (as in Google Form)" style="min-width:180px;" onkeydown="if(event.key==='Enter')addOfficer('${p}')"/>
+    <input class="input-sm" id="${p}newDesig" list="rosterDesigList" placeholder="Designation" style="min-width:160px;" onkeydown="if(event.key==='Enter')addOfficer('${p}')"/>
+    <input class="input-sm" id="${p}newDept" list="rosterDeptList" placeholder="Department" style="min-width:140px;" onkeydown="if(event.key==='Enter')addOfficer('${p}')"/>
+    <button class="btn btn-primary" onclick="addOfficer('${p}')">+ Add Officer</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+    <button class="btn btn-outline btn-xs" onclick="exportRoster()" title="Download the list as a file (to move it to another computer/browser)">⬇ Backup List</button>
+    <label class="btn btn-outline btn-xs" style="display:inline-block;" title="Load a list saved with Backup List">⬆ Restore List<input type="file" accept=".json,application/json" style="display:none;" onchange="importRoster(this)"/></label>
+    <button class="btn btn-outline btn-xs" onclick="resetRoster()" style="color:#999;border-color:#ccc;">↺ Reset to Default</button>
+    <span class="save-note" id="${p}rosterSaved"></span>
+  </div>`;
+}
+function initRosterWidgets(){
+  [['','rosterMount'],['w','wRosterMount']].forEach(([p,id])=>{
+    const el=document.getElementById(id); if(el) el.innerHTML=rosterWidgetHTML(p);
+  });
+  if(!document.getElementById('rosterDesigList')){
+    const holder=document.createElement('div');
+    holder.innerHTML='<datalist id="rosterDesigList"></datalist><datalist id="rosterDeptList"></datalist>';
+    document.body.appendChild(holder);
+  }
+}
 function renderMaster(){
-  const html = masterList.map((o,i)=>`
-    <div class="master-row">
+  const desigs=[...new Set(roster.map(o=>o.desig).filter(Boolean))].sort();
+  const depts=[...new Set(roster.map(o=>o.dept).filter(Boolean))].sort();
+  const dl1=document.getElementById('rosterDesigList'); if(dl1) dl1.innerHTML=desigs.map(d=>`<option value="${escHtml(d)}">`).join('');
+  const dl2=document.getElementById('rosterDeptList');  if(dl2) dl2.innerHTML=depts.map(d=>`<option value="${escHtml(d)}">`).join('');
+  ['','w'].forEach(p=>{
+    const sel=document.getElementById(p+'rosterDept');
+    if(sel){
+      if(rosterUI[p].dept!=='ALL' && !depts.includes(rosterUI[p].dept)) rosterUI[p].dept='ALL';
+      sel.innerHTML='<option value="ALL">All departments</option>'+depts.map(d=>{
+        const tot=roster.filter(o=>o.dept===d).length, act=roster.filter(o=>o.dept===d&&o.active).length;
+        return `<option value="${escHtml(d)}">${escHtml(d)} (${act}/${tot})</option>`;
+      }).join('');
+      sel.value=rosterUI[p].dept;
+    }
+    renderRosterList(p);
+  });
+  const countTxt=`${masterList.length} of ${roster.length} selected`;
+  ['masterCount','wMasterCount'].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=countTxt; });
+}
+function rosterVisible(p){
+  const q=(rosterUI[p].q||'').trim().toUpperCase(), dept=rosterUI[p].dept;
+  return roster.map((o,i)=>({o,i})).filter(({o})=>
+    (dept==='ALL'||o.dept===dept) && (!q||o.name.includes(q)||o.desig.includes(q)||o.dept.includes(q)));
+}
+function renderRosterList(p){
+  const grid=document.getElementById(p+'rosterGrid'); if(!grid) return;
+  const vis=rosterVisible(p);
+  grid.innerHTML = vis.map(({o,i})=>`
+    <label class="master-row${o.active?'':' inactive'}" title="${o.active?'Tracked — click to exclude':'Excluded — click to include'}">
+      <input type="checkbox" ${o.active?'checked':''} onchange="toggleOfficer(${i},this.checked)"/>
       <span class="master-num">${i+1}</span>
-      <span class="master-name">${o[0]}</span>
-      <span class="master-desig">${o[1]}</span>
-      <button class="master-rm" onclick="removeOfficer(${i})">×</button>
-    </div>`).join('');
-  const g1 = document.getElementById('masterGrid');
-  const g2 = document.getElementById('wMasterGrid');
-  if(g1) g1.innerHTML = html;
-  if(g2) g2.innerHTML = html;
-  const countTxt = masterList.length+' officers';
-  const c1 = document.getElementById('masterCount');
-  const c2 = document.getElementById('wMasterCount');
-  if(c1) c1.textContent = countTxt;
-  if(c2) c2.textContent = countTxt;
+      <span class="master-info"><span class="master-name">${escHtml(o.name)}</span><span class="master-desig">${escHtml(o.desig)} · ${escHtml(o.dept)}</span></span>
+      <button class="master-rm" title="Remove officer permanently" onclick="event.preventDefault();event.stopPropagation();removeOfficer(${i})">×</button>
+    </label>`).join('') || '<div style="color:#999;font-size:.8rem;padding:8px;">No officers match this filter.</div>';
+  const sum=document.getElementById(p+'rosterSummary');
+  if(sum) sum.innerHTML=`<b style="color:#1A6B3A;">${masterList.length}</b> selected &nbsp;·&nbsp; <b style="color:#999;">${roster.length-masterList.length}</b> excluded &nbsp;·&nbsp; ${roster.length} total${vis.length!==roster.length?` &nbsp;·&nbsp; showing ${vis.length}`:''}`;
+  const sv=document.getElementById(p+'rosterSaved');
+  if(sv){ sv.className='save-note'+(rosterSaveOk?'':' warn'); sv.textContent=rosterSaveOk?'✔ Saved in this browser':'⚠ Browser storage blocked — changes will be lost on reload. Use Backup List.'; }
 }
-function addOfficer(){
-  const n=document.getElementById('newName').value.trim().toUpperCase();
-  const d=document.getElementById('newDesig').value.trim().toUpperCase();
-  if(!n||!d){alert('Enter both name and designation.');return;}
-  masterList.push([n,d]);
-  document.getElementById('newName').value='';
-  document.getElementById('newDesig').value='';
-  renderMaster();
+function rosterChanged(){ syncRoster(); renderMaster(); }
+function toggleOfficer(i,checked){ if(!roster[i]) return; roster[i].active=!!checked; rosterChanged(); }
+function rosterBulk(p,val){ rosterVisible(p).forEach(({o})=>o.active=val); rosterChanged(); }
+function addOfficer(p){
+  p=p||'';
+  const nEl=document.getElementById(p+'newName'), dEl=document.getElementById(p+'newDesig'), deEl=document.getElementById(p+'newDept');
+  const n=nEl.value.trim().toUpperCase(), d=dEl.value.trim().toUpperCase(), dept=deEl.value.trim().toUpperCase()||'UNSPECIFIED';
+  if(!n||!d){ alert('Enter at least the officer name and designation.'); return; }
+  const ex=roster.find(o=>o.name===n);
+  if(ex){
+    if(ex.active){ alert(n+' is already in the list.'); }
+    else if(confirm(n+' is already in the list but unticked. Tick them again?')){ ex.active=true; rosterChanged(); }
+    return;
+  }
+  roster.push({name:n,desig:d,dept,active:true});
+  nEl.value=''; dEl.value=''; deEl.value='';
+  rosterChanged();
+  nEl.focus();
 }
-function removeOfficer(i){masterList.splice(i,1);renderMaster();}
-function clearMaster(){if(confirm('Clear entire master list?')){masterList=[];renderMaster();}}
-function wAddOfficer(){
-  const n=document.getElementById('wNewName').value.trim().toUpperCase();
-  const d=document.getElementById('wNewDesig').value.trim().toUpperCase();
-  if(!n||!d){alert('Enter both name and designation.');return;}
-  masterList.push([n,d]);
-  document.getElementById('wNewName').value='';
-  document.getElementById('wNewDesig').value='';
-  renderMaster();
+function removeOfficer(i){
+  const o=roster[i]; if(!o) return;
+  if(!confirm(`Remove ${o.name} from the list permanently?\n\n(To skip them for now, just untick instead.)`)) return;
+  roster.splice(i,1); rosterChanged();
 }
-function wClearMaster(){if(confirm('Clear entire master list?')){masterList=[];renderMaster();}}
+function resetRoster(){
+  if(!confirm('Reset the officer list to the original default roster? Officers you added will be removed.')) return;
+  roster=defaultRoster(); rosterChanged();
+}
+function exportRoster(){
+  const payload={type:'scmc-inspection-roster',version:1,savedOn:new Date().toISOString(),officers:roster};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='SCMC_Officer_List_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500);
+}
+function importRoster(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      const arr=Array.isArray(data)?data:(data&&data.officers);
+      const seen=new Set();
+      const list=(arr||[]).map(cleanOfficer).filter(o=>o.name&&!seen.has(o.name)&&seen.add(o.name));
+      if(!list.length) throw new Error('no officers found in the file');
+      if(confirm(`Replace the current list (${roster.length} officers) with ${list.length} officers from this file?`)){
+        roster=list; rosterChanged();
+      }
+    }catch(e){ alert('Could not read this file: '+e.message); }
+    finally{ input.value=''; }
+  };
+  reader.readAsText(f);
+}
 
 function getColIdx(id){return parseInt(document.getElementById(id).value)||0;}
 
+/* ── Date helpers: read the reported date from the Timestamp column ── */
+function pad2(n){ return String(n).padStart(2,'0'); }
+function dateToYMD(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function validYMD(y,mo,d){
+  if(mo<1||mo>12||d<1||d>31) return null;
+  const dt=new Date(y,mo-1,d); if(dt.getMonth()!==mo-1) return null;
+  return y+'-'+pad2(mo)+'-'+pad2(d);
+}
+function detectDateOrder(tsList){
+  const el=document.getElementById('col_dateorder');
+  const pref=el?el.value:'AUTO';
+  if(pref==='DMY'||pref==='MDY') return pref;
+  let dmy=0, mdy=0;
+  tsList.forEach(ts=>{
+    const m=String(ts||'').trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+    if(!m) return;
+    const a=+m[1], b=+m[2];
+    if(a>12&&b<=12) dmy++; else if(b>12&&a<=12) mdy++;
+  });
+  return mdy>dmy ? 'MDY' : 'DMY';   // Indian sheets default to DD/MM/YYYY
+}
+function parseSheetDate(ts, order){
+  ts=String(ts||'').trim(); if(!ts) return null;
+  let m=ts.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/);
+  if(m) return validYMD(+m[1],+m[2],+m[3]);
+  m=ts.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+  if(m){
+    let a=+m[1], b=+m[2], y=+m[3]; if(y<100) y+=2000;
+    let d=a, mo=b; if(order==='MDY'){ d=b; mo=a; }
+    if(mo>12&&d<=12){ const t=d; d=mo; mo=t; }
+    return validYMD(y,mo,d);
+  }
+  const dt=new Date(ts); if(!isNaN(dt)) return dateToYMD(dt);
+  return null;
+}
+function fmtYMD(ymd,opts){ return new Date(ymd+'T00:00:00').toLocaleDateString('en-IN',opts||{day:'2-digit',month:'short',year:'numeric'}); }
+function renderDateChips(elId, counts, selected, fnName){
+  const el=document.getElementById(elId); if(!el) return;
+  const dates=Object.keys(counts).sort().reverse();
+  if(!dates.length){ el.innerHTML=''; return; }
+  const shown=dates.slice(0,14);
+  el.innerHTML='<span style="font-size:.72rem;color:#888;align-self:center;">Dates in pasted data:</span>'+
+    shown.map(d=>`<button type="button" class="date-chip${d===selected?' active':''}" onclick="${fnName}('${d}')">${fmtYMD(d,{weekday:'short',day:'2-digit',month:'short'})}<b>${counts[d]}</b></button>`).join('')+
+    (dates.length>14?`<span style="font-size:.72rem;color:#aaa;align-self:center;">+${dates.length-14} older date(s) — pick with the date box</span>`:'');
+}
+
+let lastDailyRaw = '';
 function parseData(){
   const raw = document.getElementById('pasteBox').value.trim();
-  if(!raw){parsedData=[];return;}
+  if(!raw){
+    parsedData=[]; lastDailyRaw='';
+    document.getElementById('parseStatus').className='parse-status';
+    renderDateChips('dailyDateChips',{},'','pickDailyDate');
+    return;
+  }
+  const isNew = raw!==lastDailyRaw; lastDailyRaw = raw;
   const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
-  if(lines.length<2){showStatus('err','Need at least a header row + 1 data row.');return;}
+  if(lines.length<2){parsedData=[];showStatus('err','Need at least a header row + 1 data row.');return;}
   const ci = {
     ts:   getColIdx('col_ts'),
     name: getColIdx('col_name'),
@@ -1181,10 +1313,11 @@ function parseData(){
   };
   const headerRow = lines[0].toLowerCase();
   const dataStart = (headerRow.includes('name') || headerRow.includes('officer') || headerRow.includes('timestamp')) ? 1 : 0;
-  parsedData = [];
+  const rows = [];
   for(let i=dataStart;i<lines.length;i++){
     const cols = lines[i].split('\t');
     if(cols.length < 4) continue;
+    const tsRaw= (cols[ci.ts]||'').trim();
     const name = (cols[ci.name]||'').trim().toUpperCase();
     const desig= (cols[ci.desig]||'').trim().toUpperCase();
     const zone = (cols[ci.zone]||'').trim().toUpperCase();
@@ -1193,10 +1326,40 @@ function parseData(){
     const photo= (cols[ci.photo]||'').trim();
     const rem  = (cols[ci.rem] ||'').trim();
     if(!name||!insp) continue;
-    parsedData.push({name,desig,zone,ward,insp,photo,rem});
+    rows.push({tsRaw,name,desig,zone,ward,insp,photo,rem});
   }
-  if(parsedData.length===0){showStatus('err','No valid data rows found. Check column mapping.');return;}
-  showStatus('ok',`✔ ${parsedData.length} inspection entries parsed from ${new Set(parsedData.map(r=>r.name)).size} officers.`);
+  if(!rows.length){parsedData=[];renderDateChips('dailyDateChips',{},'','pickDailyDate');showStatus('err','No valid data rows found. Check column mapping.');return;}
+
+  const order = detectDateOrder(rows.map(r=>r.tsRaw));
+  rows.forEach(r=>r.dateStr=parseSheetDate(r.tsRaw,order));
+  const counts={}; rows.forEach(r=>{ if(r.dateStr) counts[r.dateStr]=(counts[r.dateStr]||0)+1; });
+  const dates=Object.keys(counts).sort();
+  const noDate=rows.filter(r=>!r.dateStr).length;
+
+  if(!dates.length){
+    parsedData=rows;
+    renderDateChips('dailyDateChips',{},'','pickDailyDate');
+    showStatus('err',`⚠ Could not read dates from the Timestamp column (column ${ci.ts}) — all ${rows.length} rows included. Check the column mapping below.`);
+    return;
+  }
+  const rdEl=document.getElementById('reportDate');
+  if(isNew || !rdEl.value){ rdEl.value=dates[dates.length-1]; updateHeaderDate(); }
+  const sel=rdEl.value;
+  parsedData = rows.filter(r=>r.dateStr===sel);
+  renderDateChips('dailyDateChips',counts,sel,'pickDailyDate');
+  if(!parsedData.length){
+    showStatus('err',`No entries on ${fmtYMD(sel)}. Latest date in pasted data is ${fmtYMD(dates[dates.length-1])} — pick a date below.`);
+    return;
+  }
+  const others = rows.length-parsedData.length-noDate;
+  showStatus('ok',`✔ Report date: ${fmtYMD(sel)}${sel===dates[dates.length-1]?' (latest in pasted data)':''} — ${parsedData.length} inspection entries from ${new Set(parsedData.map(r=>r.name)).size} officers.`+
+    (others?` ${others} entries from ${dates.length-1} other date(s) ignored.`:'')+
+    (noDate?` ⚠ ${noDate} row(s) with unreadable timestamp skipped.`:''));
+}
+function pickDailyDate(d){
+  document.getElementById('reportDate').value=d;
+  updateHeaderDate(); parseData();
+  if(document.getElementById('tab-preview').classList.contains('active')) buildPreview();
 }
 
 function showStatus(type,msg){
@@ -1204,7 +1367,7 @@ function showStatus(type,msg){
   el.className='parse-status '+type;
   el.textContent=msg;
 }
-function clearPaste(){document.getElementById('pasteBox').value='';parsedData=[];document.getElementById('parseStatus').className='parse-status';}
+function clearPaste(){document.getElementById('pasteBox').value='';parseData();}
 
 function buildPreview(){
   if(!parsedData.length){
@@ -1228,7 +1391,7 @@ function buildPreview(){
   const notSubmitted = masterList.filter(m=>!submittedNames.has(m[0]));
   const total = parsedData.length;
   const submitted = submittedNames.size;
-  const coverage = masterList.length ? Math.round(submitted/masterList.length*100) : 0;
+  const coverage = masterList.length ? Math.round((masterList.length-notSubmitted.length)/masterList.length*100) : 0;
 
   document.getElementById('s_total').textContent=total;
   document.getElementById('s_submitted').textContent=submitted;
@@ -1475,7 +1638,7 @@ async function generatePDF(){
     const submitted = Object.keys(byOfficer).length;
     const submittedNames = new Set(Object.keys(byOfficer));
     const notSubmitted = masterList.filter(m=>!submittedNames.has(m[0]));
-    const coverage = masterList.length ? Math.round(submitted/masterList.length*100) : 0;
+    const coverage = masterList.length ? Math.round((masterList.length-notSubmitted.length)/masterList.length*100) : 0;
     const zoneCounts={};
     parsedData.forEach(r=>{const z=r.zone||'UNKNOWN';zoneCounts[z]=(zoneCounts[z]||0)+1;});
 
@@ -1744,25 +1907,25 @@ function getZoneColor(zone){
 let weeklyData = [];
 let chartTrend = null;
 
+let lastWeeklyRaw = '';
 function parseWeeklyData(){
   const raw = document.getElementById('weeklyPasteBox').value.trim();
-  if(!raw){ weeklyData=[]; return; }
+  if(!raw){ weeklyData=[]; lastWeeklyRaw=''; return; }
+  const isNew = raw!==lastWeeklyRaw; lastWeeklyRaw = raw;
   const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
-  if(lines.length < 2){ showWeeklyStatus('err','Need header + at least 1 data row.'); return; }
+  if(lines.length < 2){ weeklyData=[]; showWeeklyStatus('err','Need header + at least 1 data row.'); return; }
 
   const ci = {
     ts:   getColIdx('col_ts'),
     name: getColIdx('col_name'),
     desig:getColIdx('col_desig'),
     zone: getColIdx('col_zone'),
-    ward: getColIdx('col_ward'),
     insp: getColIdx('col_insp'),
-    rem:  getColIdx('col_rem'),
   };
   const headerRow = lines[0].toLowerCase();
   const dataStart = (headerRow.includes('name')||headerRow.includes('officer')||headerRow.includes('timestamp')) ? 1 : 0;
 
-  weeklyData = [];
+  const rows = [];
   for(let i=dataStart; i<lines.length; i++){
     const cols = lines[i].split('\t');
     if(cols.length < 4) continue;
@@ -1772,21 +1935,36 @@ function parseWeeklyData(){
     const zone  = (cols[ci.zone]||'').trim().toUpperCase();
     const insp  = (cols[ci.insp]||'').trim();
     if(!name||!insp) continue;
-    let dateStr = '';
-    try {
-      const d = new Date(tsRaw);
-      if(!isNaN(d)) dateStr = d.toISOString().split('T')[0];
-      else {
-        const m = tsRaw.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-        if(m) dateStr = `${m[3]}-${m[2]}-${m[1]}`;
-      }
-    } catch(e){}
-    weeklyData.push({name, desig, zone, insp, dateStr});
+    rows.push({tsRaw, name, desig, zone, insp});
   }
+  if(!rows.length){ weeklyData=[]; showWeeklyStatus('err','No valid rows found. Check column mapping.'); return; }
 
-  if(!weeklyData.length){ showWeeklyStatus('err','No valid rows found. Check column mapping.'); return; }
-  const days = new Set(weeklyData.map(r=>r.dateStr).filter(Boolean)).size;
-  showWeeklyStatus('ok', `✔ ${weeklyData.length} entries parsed across ${days} day(s) from ${new Set(weeklyData.map(r=>r.name)).size} officers.`);
+  const order = detectDateOrder(rows.map(r=>r.tsRaw));
+  rows.forEach(r=>r.dateStr=parseSheetDate(r.tsRaw,order)||'');
+  const dates = [...new Set(rows.map(r=>r.dateStr).filter(Boolean))].sort();
+  if(!dates.length){
+    weeklyData = rows;
+    showWeeklyStatus('err','⚠ Could not read dates from the Timestamp column — all rows included. Check the column mapping in the Daily → Paste Data tab.');
+    return;
+  }
+  const fEl=document.getElementById('weekFrom'), tEl=document.getElementById('weekTo');
+  if(isNew){
+    const last=dates[dates.length-1];
+    const start=new Date(last+'T00:00:00'); start.setDate(start.getDate()-6);
+    const startYmd=dateToYMD(start);
+    tEl.value=last;
+    fEl.value=dates[0]>startYmd?dates[0]:startYmd;
+  }
+  const from=fEl.value||dates[0], to=tEl.value||dates[dates.length-1];
+  weeklyData = rows.filter(r=>r.dateStr && r.dateStr>=from && r.dateStr<=to);
+  if(!weeklyData.length){
+    showWeeklyStatus('err',`No entries between ${fmtYMD(from)} and ${fmtYMD(to)}. Pasted data covers ${fmtYMD(dates[0])} to ${fmtYMD(dates[dates.length-1])}.`);
+    return;
+  }
+  const days = new Set(weeklyData.map(r=>r.dateStr)).size;
+  const ignored = rows.length-weeklyData.length;
+  showWeeklyStatus('ok', `✔ Week: ${fmtYMD(from)} to ${fmtYMD(to)} — ${weeklyData.length} entries across ${days} day(s) from ${new Set(weeklyData.map(r=>r.name)).size} officers.`+
+    (ignored?` ${ignored} entries outside this week ignored.`:''));
 }
 
 function showWeeklyStatus(type, msg){
@@ -2172,15 +2350,18 @@ function toDirectImageUrl(url){
   return url;
 }
 
+let lastReviewRaw = '';
 function parseReviewData(){
   const raw = document.getElementById('reviewPasteBox').value.trim();
   const statusEl = document.getElementById('reviewParseStatus');
   if(!raw){
-    reviewData=[];
+    reviewData=[]; lastReviewRaw='';
     statusEl.className='parse-status';
+    renderDateChips('reviewDateChips',{},'','pickReviewDate');
     renderReviewDeptFilter(); renderReviewTable();
     return;
   }
+  const isNew = raw!==lastReviewRaw; lastReviewRaw = raw;
   const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
   if(lines.length<2){
     statusEl.className='parse-status err'; statusEl.textContent='Need at least a header row + 1 data row.';
@@ -2188,6 +2369,7 @@ function parseReviewData(){
   }
   // Reuse the same column mapping configured in the Paste Data (Daily) tab.
   const ci = {
+    ts:   getColIdx('col_ts'),
     name: getColIdx('col_name'),
     desig:getColIdx('col_desig'),
     zone: getColIdx('col_zone'),
@@ -2199,10 +2381,11 @@ function parseReviewData(){
   const headerRow = lines[0].toLowerCase();
   const dataStart = (headerRow.includes('name') || headerRow.includes('officer') || headerRow.includes('timestamp')) ? 1 : 0;
   const deptMap = reviewDeptMap();
-  reviewData = [];
+  const rows = [];
   for(let i=dataStart;i<lines.length;i++){
     const cols = lines[i].split('\t');
     if(cols.length < 4) continue;
+    const tsRaw= (cols[ci.ts]||'').trim();
     const name = (cols[ci.name]||'').trim().toUpperCase();
     const desig= (cols[ci.desig]||'').trim().toUpperCase();
     const zone = (cols[ci.zone]||'').trim().toUpperCase();
@@ -2213,18 +2396,51 @@ function parseReviewData(){
     const rem  = (cols[ci.rem] ||'').trim();
     if(!name||!insp) continue;
     const dept = deptMap[name] || 'UNMAPPED';
-    reviewData.push({name,desig,zone,ward,insp,photos,rem,dept});
+    rows.push({tsRaw,name,desig,zone,ward,insp,photos,rem,dept});
   }
-  if(reviewData.length===0){
+  if(!rows.length){
+    reviewData=[];
     statusEl.className='parse-status err'; statusEl.textContent='No valid data rows found. Check column mapping in the Setup → Paste Data column mapping panel.';
+    renderDateChips('reviewDateChips',{},'','pickReviewDate');
     renderReviewDeptFilter(); renderReviewTable();
     return;
   }
+  const order = detectDateOrder(rows.map(r=>r.tsRaw));
+  rows.forEach(r=>r.dateStr=parseSheetDate(r.tsRaw,order));
+  const counts={}; rows.forEach(r=>{ if(r.dateStr) counts[r.dateStr]=(counts[r.dateStr]||0)+1; });
+  const dates=Object.keys(counts).sort();
+  const noDate=rows.filter(r=>!r.dateStr).length;
+  let note='';
+  if(!dates.length){
+    reviewData=rows;
+    renderDateChips('reviewDateChips',{},'','pickReviewDate');
+    note='⚠ Dates could not be read from the Timestamp column — all rows included.';
+  } else {
+    const rvEl=document.getElementById('reviewDate');
+    if(isNew || !rvEl.value){ rvEl.value=dates[dates.length-1]; updateReviewDate(); }
+    const sel=rvEl.value;
+    reviewData=rows.filter(r=>r.dateStr===sel);
+    renderDateChips('reviewDateChips',counts,sel,'pickReviewDate');
+    if(!reviewData.length){
+      statusEl.className='parse-status err';
+      statusEl.textContent=`No entries on ${fmtYMD(sel)}. Latest date in pasted data is ${fmtYMD(dates[dates.length-1])} — pick a date below.`;
+      renderReviewDeptFilter(); renderReviewTable();
+      return;
+    }
+    const others=rows.length-reviewData.length-noDate;
+    note=`Review date: ${fmtYMD(sel)}${sel===dates[dates.length-1]?' (latest in pasted data)':''}.`+
+      (others?` ${others} entries from other dates ignored.`:'')+
+      (noDate?` ⚠ ${noDate} row(s) with unreadable timestamp skipped.`:'');
+  }
+  if(isNew) reviewSelectedDepts = new Set(REVIEW_MASTER.map(r=>r[2]));
   statusEl.className='parse-status ok';
-  statusEl.textContent = `✔ ${reviewData.length} inspection entries parsed from ${new Set(reviewData.map(r=>r.name)).size} staff. Select department(s) below.`;
-  reviewSelectedDepts = new Set(REVIEW_MASTER.map(r=>r[2]));
+  statusEl.textContent = `✔ ${note} ${reviewData.length} inspection entries from ${new Set(reviewData.map(r=>r.name)).size} staff. Select department(s) below.`;
   renderReviewDeptFilter();
   renderReviewTable();
+}
+function pickReviewDate(d){
+  document.getElementById('reviewDate').value=d;
+  updateReviewDate(); parseReviewData();
 }
 
 function renderReviewDeptFilter(){
@@ -2398,6 +2614,8 @@ function renderReviewTable(){
 
 /* ===================== DATE RANGE MODULE ===================== */
 let rangeData = [];
+let rangeSuppressPreview = false;
+let rangeDateOrder = 'DMY';
 let rangeHolidays = {};
 let rngChartTrend = null;
 
@@ -2475,16 +2693,10 @@ function buildRangeCalendar(){
     </div>`;
   });
   wrap.innerHTML=html+'</div>';
-  if(rangeData.length) buildRangePreview();
+  if(rangeData.length && !rangeSuppressPreview) buildRangePreview();
 }
 
-function rangeParseTimestamp(ts){
-  if(!ts) return null;
-  const d=new Date(ts); if(!isNaN(d)) return rangeToYMD(d);
-  const m=ts.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-  if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
-  return null;
-}
+function rangeParseTimestamp(ts){ return parseSheetDate(ts, rangeDateOrder); }
 
 function parseRangeData(){
   const raw=document.getElementById('rangePasteBox').value.trim();
@@ -2496,6 +2708,7 @@ function parseRangeData(){
   const headerRow=lines[0].toLowerCase();
   const dataStart=(headerRow.includes('timestamp')||headerRow.includes('name')||headerRow.includes('officer'))?1:0;
   const deptMap={}; REVIEW_MASTER.forEach(r=>{ deptMap[r[0]]=r[2]||'UNSPECIFIED'; });
+  rangeDateOrder=detectDateOrder(lines.slice(dataStart).map(l=>(l.split('\t')[ci.ts]||'').trim()));
   rangeData=[];
   for(let i=dataStart;i<lines.length;i++){
     const cols=lines[i].split('\t');
@@ -2510,8 +2723,27 @@ function parseRangeData(){
   }
   if(!rangeData.length){ statusEl.className='parse-status err'; statusEl.textContent='No valid rows found.'; return; }
   const noDate=rangeData.filter(r=>!r.ymd).length;
+  const dates=[...new Set(rangeData.map(r=>r.ymd).filter(Boolean))].sort();
+  let wd=new Set(rangeGetWorkingDays());
+  let inRange=rangeData.filter(r=>r.ymd&&wd.has(r.ymd)).length;
+  let autoNote='';
+  if(!inRange && dates.length){
+    // Nothing falls in the selected range — jump to the month of the latest reported date
+    const last=new Date(dates[dates.length-1]+'T00:00:00');
+    const f=rangeToYMD(new Date(last.getFullYear(),last.getMonth(),1));
+    const t=rangeToYMD(new Date(last.getFullYear(),last.getMonth()+1,0));
+    document.getElementById('rangeFrom').value=f;
+    document.getElementById('rangeTo').value=t;
+    rangeSuppressPreview=true; try{ buildRangeCalendar(); } finally{ rangeSuppressPreview=false; }
+    wd=new Set(rangeGetWorkingDays());
+    inRange=rangeData.filter(r=>r.ymd&&wd.has(r.ymd)).length;
+    autoNote=` Range auto-set to ${rangeFmt(f)} – ${rangeFmt(t)} (month of the latest reported date).`;
+  }
   statusEl.className='parse-status ok';
-  statusEl.textContent=`✔ ${rangeData.length} total entries parsed from ${new Set(rangeData.map(r=>r.name)).size} officers across ${new Set(rangeData.map(r=>r.ymd).filter(Boolean)).size} day(s). Click Analyse → to filter to working days only.${noDate?` ⚠ ${noDate} rows had unreadable timestamps.`:''}`;
+  statusEl.textContent=`✔ ${rangeData.length} entries parsed from ${new Set(rangeData.map(r=>r.name)).size} officers`+
+    (dates.length?` reported between ${rangeFmt(dates[0])} and ${rangeFmt(dates[dates.length-1])}`:'')+
+    `. ${inRange} fall on working days in the selected range — click Analyse →.${autoNote}`+
+    (noDate?` ⚠ ${noDate} rows had unreadable timestamps.`:'');
 }
 
 function resetRangeUI(){
