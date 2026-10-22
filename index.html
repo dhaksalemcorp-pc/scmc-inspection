@@ -953,15 +953,15 @@ const DEFAULT_ROSTER = [
   ["MADHAVASANKAR","EXECUTIVE ENGINEER","ENGINEERING"],
   ["RAJA","EXECUTIVE ENGINEER","ENGINEERING"],
   ["SEKAR","EXECUTIVE ENGINEER","ENGINEERING"],
+  ["S.K.SUGANTHI","EXECUTIVE ENGINEER","ENGINEERING"],
   ["RAM KUMAR","CITY HEALTH OFFICER","PUBLIC HEALTH"],
   ["EGARAJ","ASSISTANT COMMISSIONER","GENERAL"],
   ["SUBRAMANIYAN","ASSISTANT COMMISSIONER","GENERAL"],
   ["AMSAVENI","ASSISTANT COMMISSIONER","GENERAL"],
+  ["K.SUDHA","ASSISTANT COMMISSIONER","GENERAL"],
   ["KUMARESAN","ASSISTANT COMMISSIONER","REVENUE"],
   ["THANGAMANI","ASSISTANT EXECUTIVE ENGINEER","TOWNPLANNING"],
-  ["OBULI SUNDAR","ASSISTANT EXECUTIVE ENGINEER","ENGINEERING"],
   ["SENTHIL KUMAR","ASSISTANT EXECUTIVE ENGINEER","ENGINEERING"],
-  ["SUMATHI","ASSISTANT EXECUTIVE ENGINEER","ENGINEERING"],
   ["DIVYA","ASSISTANT ENGINEER","TOWNPLANNING"],
   ["SASEDHARAN","ASSISTANT ENGINEER","TOWNPLANNING"],
   ["EZHILARASI","ASSISTANT ENGINEER","TOWNPLANNING"],
@@ -982,9 +982,11 @@ const DEFAULT_ROSTER = [
   ["R.PRAKASH","JUNIOR ENGINEER","ENGINEERING"],
   ["SENTHAMARAI","ASSISTANT ENGINEER","ENGINEERING"],
   ["DINESH RAJ","ASSISTANT ENGINEER","ENGINEERING"],
+  ["NALLASAMY","SANITARY OFFICER","PUBLIC HEALTH"],
+  ["KANNAN","SANITARY OFFICER","PUBLIC HEALTH"],
+  ["RAMAKRISHNAN","SANITARY OFFICER","PUBLIC HEALTH"],
   ["SIVANAGNAMOORTHY","SANITARY INSPECTOR","PUBLIC HEALTH"],
   ["UMAMAHESWARI","SANITARY INSPECTOR","PUBLIC HEALTH"],
-  ["SARAVANAN","SANITARY INSPECTOR","PUBLIC HEALTH"],
   ["KESAVARAJ","SANITARY INSPECTOR","PUBLIC HEALTH"],
   ["PUNITHARASU","SANITARY INSPECTOR","PUBLIC HEALTH"],
   ["MANIDURGADEVI","SANITARY INSPECTOR","PUBLIC HEALTH"],
@@ -1006,7 +1008,30 @@ let REVIEW_MASTER = [];   // every officer with department: [name, desig, dept]
 let rosterSaveOk = true;
 const rosterUI = { '':{q:'',dept:'ALL'}, 'w':{q:'',dept:'ALL'} };
 let roster = loadRoster() || defaultRoster();
-syncRoster(false);
+/* One-time roster updates — also applied to a list already saved in this browser */
+const ROSTER_PATCHES = [
+  { id:1, add:[["NALLASAMY","SANITARY OFFICER","PUBLIC HEALTH"],["KANNAN","SANITARY OFFICER","PUBLIC HEALTH"],["RAMAKRISHNAN","SANITARY OFFICER","PUBLIC HEALTH"]], remove:["SARAVANAN"] },
+  { id:2, add:[["K.SUDHA","ASSISTANT COMMISSIONER","GENERAL","AMSAVENI"]] },
+  { id:3, add:[["S.K.SUGANTHI","EXECUTIVE ENGINEER","ENGINEERING","SEKAR"]], remove:["OBULI SUNDAR","SUMATHI"] },
+];
+(function applyRosterPatches(){
+  let done=0; try{ done=parseInt(localStorage.getItem(ROSTER_KEY+'_patch')||'0',10)||0; }catch(e){}
+  let changed=false;
+  ROSTER_PATCHES.filter(pt=>pt.id>done).forEach(pt=>{
+    const rm=new Set(pt.remove||[]);
+    const before=roster.length; roster=roster.filter(o=>!rm.has(o.name)); if(roster.length!==before) changed=true;
+    (pt.add||[]).forEach(([n,d,dp,after])=>{ if(!roster.some(o=>o.name===n)){
+      const rec={name:n,desig:d,dept:dp,active:true};
+      let at=-1;
+      if(after){ const ai=roster.findIndex(o=>o.name===after); if(ai>=0) at=ai+1; }
+      if(at<0){ const si=roster.findIndex(o=>o.desig==='SANITARY INSPECTOR'); at=(!after&&si>=0)?si:-1; }
+      if(at>=0) roster.splice(at,0,rec); else roster.push(rec);
+      changed=true; } });
+    done=pt.id;
+  });
+  try{ localStorage.setItem(ROSTER_KEY+'_patch',String(done)); }catch(e){}
+  syncRoster(changed);
+})();
 
 let parsedData = [];
 let chartBar=null, chartPie=null, chartDonut=null;
@@ -1459,6 +1484,7 @@ function desigShort(desig){
   if(d.includes('EXECUTIVE ENGINEER')) return 'EE';
   if(d.includes('ASSISTANT ENGINEER')) return 'AE';
   if(d.includes('JUNIOR ENGINEER')) return 'JE';
+  if(d.includes('SANITARY OFFICER')) return 'SO';
   if(d.includes('SANITARY')) return 'SI';
   if(d.includes('DEPUTY COMMISSIONER')) return 'DC';
   if(d.includes('CITY HEALTH')) return 'CHO';
